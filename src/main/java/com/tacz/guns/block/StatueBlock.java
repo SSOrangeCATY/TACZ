@@ -1,5 +1,6 @@
 package com.tacz.guns.block;
 
+import com.mojang.serialization.MapCodec;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.block.entity.StatueBlockEntity;
 import com.tacz.guns.init.ModBlocks;
@@ -7,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,6 +31,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 public class StatueBlock extends BaseEntityBlock {
+    public static final MapCodec<StatueBlock> CODEC = simpleCodec(p-> new StatueBlock());
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
@@ -58,7 +61,11 @@ public class StatueBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult use(BlockState pState, Level level, BlockPos pos, Player player, InteractionHand pHand, BlockHitResult pHit) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        return this.use(state,level,pos,player,hand) == InteractionResult.SUCCESS ? ItemInteractionResult.SUCCESS : ItemInteractionResult.CONSUME;
+    }
+
+    public InteractionResult use(BlockState pState, Level level, BlockPos pos, Player player,InteractionHand hand) {
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         } else {
@@ -68,7 +75,7 @@ public class StatueBlock extends BaseEntityBlock {
 
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof StatueBlockEntity statueBlockEntity) {
-                ItemStack stack = player.getItemInHand(pHand);
+                ItemStack stack = player.getItemInHand(hand);
                 if (stack.getItem() instanceof IGun) {
                     statueBlockEntity.setGun(stack);
                     stack.shrink(1);
@@ -93,7 +100,7 @@ public class StatueBlock extends BaseEntityBlock {
         if (level.getBlockState(above).canBeReplaced(context) && level.getWorldBorder().isWithinBounds(above)) {
             return this.defaultBlockState().setValue(FACING, direction);
         }
-        return null;
+        return this.defaultBlockState();
     }
 
     @Override
@@ -132,6 +139,11 @@ public class StatueBlock extends BaseEntityBlock {
             }
             super.onRemove(pState, pLevel, pPos, pNewState, pMovedByPiston);
         }
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override

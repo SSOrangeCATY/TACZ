@@ -1,5 +1,5 @@
 package com.tacz.guns.network.message.handshake;
-
+/*
 import com.tacz.guns.GunMod;
 import com.tacz.guns.entity.sync.core.SyncedDataKey;
 import com.tacz.guns.entity.sync.core.SyncedEntityData;
@@ -9,7 +9,6 @@ import com.tacz.guns.network.NetworkHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -76,4 +75,4 @@ public class ServerMessageSyncedEntityDataMapping extends LoginIndexHolder imple
     public Map<ResourceLocation, List<Pair<ResourceLocation, Integer>>> getKeyMap() {
         return this.keyMap;
     }
-}
+}*/

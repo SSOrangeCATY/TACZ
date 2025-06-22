@@ -1,31 +1,32 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.entity.IGunOperator;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
+public class ClientMessagePlayerFireSelect implements CustomPacketPayload {
+    public static final Type<ClientMessagePlayerFireSelect> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_fire_select"));
 
-public class ClientMessagePlayerFireSelect {
-    public static void encode(ClientMessagePlayerFireSelect message, FriendlyByteBuf buf) {
+    public static final StreamCodec<ByteBuf, ClientMessagePlayerFireSelect> STREAM_CODEC = StreamCodec.unit(new ClientMessagePlayerFireSelect());
+
+    public static void handle(ClientMessagePlayerFireSelect data, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            IGunOperator.fromLivingEntity(context.player()).fireSelect();
+        }).exceptionally(e -> {
+            GunMod.LOGGER.error("处理Payload失败", e);
+            return null;
+        });
     }
 
-    public static ClientMessagePlayerFireSelect decode(FriendlyByteBuf buf) {
-        return new ClientMessagePlayerFireSelect();
-    }
-
-    public static void handle(ClientMessagePlayerFireSelect message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isServer()) {
-            context.enqueueWork(() -> {
-                ServerPlayer entity = context.getSender();
-                if (entity == null) {
-                    return;
-                }
-                IGunOperator.fromLivingEntity(entity).fireSelect();
-            });
-        }
-        context.setPacketHandled(true);
+    @Override
+    public @NotNull CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

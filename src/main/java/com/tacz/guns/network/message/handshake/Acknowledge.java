@@ -1,10 +1,9 @@
 package com.tacz.guns.network.message.handshake;
-
+/*
 import com.tacz.guns.GunMod;
 import com.tacz.guns.network.IMessage;
 import com.tacz.guns.network.LoginIndexHolder;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -27,4 +26,4 @@ public class Acknowledge extends LoginIndexHolder implements IMessage<Acknowledg
         GunMod.LOGGER.debug(ACKNOWLEDGE, "Received acknowledgement from client");
         c.get().setPacketHandled(true);
     }
-}
+}*/

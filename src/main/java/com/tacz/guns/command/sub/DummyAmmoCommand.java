@@ -13,6 +13,7 @@ import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public class DummyAmmoCommand {
     private static final String DUMMY_NAME = "dummy";

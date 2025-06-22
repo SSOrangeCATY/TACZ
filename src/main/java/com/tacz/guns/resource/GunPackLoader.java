@@ -10,20 +10,19 @@ import cpw.mods.jarhandling.SecureJar;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
+import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.IoSupplier;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.forgespi.language.IModInfo;
-import net.minecraftforge.forgespi.locating.IModFile;
-import net.minecraftforge.resource.DelegatingPackResources;
-import net.minecraftforge.resource.PathPackResources;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.jarjar.metadata.Metadata;
+import net.neoforged.neoforgespi.language.IModInfo;
+import net.neoforged.neoforgespi.locating.IModFile;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
@@ -56,7 +55,7 @@ public enum GunPackLoader implements RepositorySource {
 
 
     @Override
-    public void loadPacks(Consumer<Pack> pOnLoad) {
+    public void loadPacks(@NotNull Consumer<Pack> pOnLoad) {
         Pack extensionsPack = discoverExtensions();
         if (extensionsPack != null) {
             pOnLoad.accept(extensionsPack);
@@ -91,47 +90,73 @@ public enum GunPackLoader implements RepositorySource {
         GunMod.LOGGER.info(MARKER, "Start scanning for gun packs in {}", resourcePacksPath);
         List<GunPack> gunPacks = scanExtensions(resourcePacksPath);
         GunMod.LOGGER.info(MARKER, "Found {} possible gunpack(s) and added them to resource set.", gunPacks.size());
-        List<PathPackResources> extensionPacks = new ArrayList<>();
 
-        for(GunPack gunPack : gunPacks) {
-            PathPackResources packResources = new PathPackResources(gunPack.name, false, gunPack.path) {
+        PackLocationInfo locationInfo = new PackLocationInfo(
+                "tacz_resources",
+                Component.literal("TACZ Resources"),
+                PackSource.BUILT_IN,
+                Optional.of(new KnownPack("tacz_resources", "main", "1.0.0")) // 版本号可根据需要调整
+        );
+
+        // 创建复合资源包
+        List<PackResources> packResources = new ArrayList<>();
+        for (GunPack gunPack : gunPacks) {
+            PackLocationInfo gunInfo = new PackLocationInfo(
+                    "tacz_resources",
+                    Component.literal("TACZ Resources"),
+                    PackSource.BUILT_IN,
+                    Optional.of(new KnownPack("tacz_resources", gunPack.name(), "1.0.0")) // 版本号可根据需要调整
+            );
+
+            packResources.add(new PathPackResources(
+                    gunInfo,
+                    gunPack.path
+            ) {
                 private final SecureJar secureJar = SecureJar.from(gunPack.path);
 
-                @NotNull
-                protected Path resolve(String... paths) {
+                private Path resolve(String... paths) {
                     if (paths.length < 1) {
                         throw new IllegalArgumentException("Missing path");
-                    } else {
-                        return this.secureJar.getPath(String.join("/", paths));
                     }
+                    return this.secureJar.getPath(String.join("/", paths));
                 }
-
-                public IoSupplier<InputStream> getResource(PackType type, ResourceLocation location) {
-                    return super.getResource(type, location);
-                }
-
-                public void listResources(PackType type, String namespace, String path, PackResources.ResourceOutput resourceOutput) {
-                    super.listResources(type, namespace, path, resourceOutput);
-                }
-            };
-            extensionPacks.add(packResources);
+            });
         }
 
+        // 创建ResourcesSupplier
+        Pack.ResourcesSupplier resourcesSupplier = new Pack.ResourcesSupplier() {
+            @Override
+            public @NotNull PackResources openPrimary(@NotNull PackLocationInfo location) {
+                return new CompositePackResources(
+                        new PathPackResources(location, resourcePacksPath) {
+                            @Override
+                            public IoSupplier<InputStream> getRootResource(String... paths) {
+                                if (paths.length == 1 && paths[0].equals("pack.png")) {
+                                    Path logoPath = getModIcon("tacz");
+                                    if (logoPath != null) {
+                                        return IoSupplier.create(logoPath);
+                                    }
+                                }
+                                return null;
+                            }
+                        },
+                        packResources
+                );
+            }
 
-        return Pack.readMetaAndCreate("tacz_resources", Component.literal("TACZ Resources"), true, (id) -> {
-            return new DelegatingPackResources(id, false, new PackMetadataSection(Component.translatable("tacz.resources.modresources"),
-                    SharedConstants.getCurrentVersion().getPackVersion(packType)), extensionPacks) {
-                public IoSupplier<InputStream> getRootResource(String... paths) {
-                    if (paths.length == 1 && paths[0].equals("pack.png")) {
-                        Path logoPath = getModIcon("tacz");
-                        if (logoPath != null) {
-                            return IoSupplier.create(logoPath);
-                        }
-                    }
-                    return null;
-                }
-            };
-        }, packType, Pack.Position.BOTTOM, PackSource.BUILT_IN);
+            @Override
+            public @NotNull PackResources openFull(@NotNull PackLocationInfo location, Pack.@NotNull Metadata metadata) {
+                return openPrimary(location);
+            }
+        };
+
+        PackSelectionConfig selectionConfig = new PackSelectionConfig(
+                true,
+                Pack.Position.BOTTOM,
+                false
+        );
+
+        return Pack.readMetaAndCreate(locationInfo, resourcesSupplier, packType, selectionConfig);
     }
 
     public static @Nullable Path getModIcon(String modId) {

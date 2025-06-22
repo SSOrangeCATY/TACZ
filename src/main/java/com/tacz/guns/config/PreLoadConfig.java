@@ -1,20 +1,16 @@
 package com.tacz.guns.config;
-
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.IConfigEvent;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.nio.file.Path;
 
 public class PreLoadConfig {
-    private static ForgeConfigSpec spec;
-    public static ForgeConfigSpec.BooleanValue override;
+    private static ModConfigSpec spec;
+    public static ModConfigSpec.BooleanValue override;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("gunpack");
         builder.comment("When enabled, the mod will not try to overwrite the default pack under .minecraft/tacz\n" +
                 "Since 1.0.4, the overwriting will only run when you start client or a dedicated server");
@@ -22,6 +18,7 @@ public class PreLoadConfig {
         builder.pop();
         spec = builder.build();
     }
+ModConfig
 
     public static PreLoadModConfig getModConfig() {
         ModLoadingContext ctx = ModLoadingContext.get();
@@ -39,5 +36,9 @@ public class PreLoadConfig {
         config.setConfigData(configData);
         config.fireEvent(IConfigEvent.loading(config));
         config.save();
+    }
+
+    public static ModConfigSpec getSpec() {
+        return spec;
     }
 }

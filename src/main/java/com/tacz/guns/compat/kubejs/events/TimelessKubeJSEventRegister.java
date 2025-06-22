@@ -1,10 +1,10 @@
 package com.tacz.guns.compat.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.EventHandler;
-import dev.latvian.mods.kubejs.event.Extra;
+
 import dev.latvian.mods.kubejs.script.ScriptTypeHolder;
 import dev.latvian.mods.kubejs.script.ScriptTypePredicate;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -36,7 +36,7 @@ public interface TimelessKubeJSEventRegister {
         EventHandler handler = registerEventJS(id, eventJSClass, hasResult);
         registerEventHandler(eventClass, (event) -> {
             GunKubeJSEvents.GunEventJS<E> eventJS = eventJSFactory.apply((E) event);
-            handler.post(eventJS, eventJS.getEventSubId());
+            handler.post(eventJS.getTypeHolder(), eventJS);
         });
         return handler;
     }
@@ -62,7 +62,7 @@ public interface TimelessKubeJSEventRegister {
             GunKubeJSEvents.GunEventJS<E> eventJS = eventJSFactory.apply((E) event);
             ScriptTypeHolder holder = eventJS.getTypeHolder();
             if (holder != null) {
-                handler.post(holder, eventJS.getEventSubId(), eventJS);
+                handler.post(holder, eventJS);
             } else {
                 throw new IllegalArgumentException("You must specify which script type to post event to");
             }
@@ -71,7 +71,7 @@ public interface TimelessKubeJSEventRegister {
     }
 
     default <E extends Event> EventHandler registerEventJS(String id, Class<? extends GunKubeJSEvents.GunEventJS<E>> eventJSClass, boolean hasResult) {
-        return hasResult ? GunKubeJSEvents.GROUP.add(id, getScriptType(), () -> eventJSClass).extra(Extra.ID).hasResult() : GunKubeJSEvents.GROUP.add(id, getScriptType(), () -> eventJSClass).extra(Extra.ID);
+        return hasResult ? GunKubeJSEvents.GROUP.add(id, getScriptType(), () -> eventJSClass).hasResult() : GunKubeJSEvents.GROUP.add(id, getScriptType(), () -> eventJSClass);
     }
 
     <E extends Event> void registerEventHandler(Class<E> eventClass, Consumer<Event> eventPoster);

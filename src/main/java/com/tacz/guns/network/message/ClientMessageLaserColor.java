@@ -1,90 +1,97 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.item.IAttachment;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.item.attachment.AttachmentType;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
-public class ClientMessageLaserColor {
-    private final Map<AttachmentType, Integer> colorMap = new HashMap<>();
-    private boolean applyGunColor = false;
-    private int gunColor = 0;
+public record ClientMessageLaserColor(Map<AttachmentType, Integer> colorMap, boolean applyGunColor, int gunColor, int gunSlotIndex) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<ClientMessageCraft> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_laser_color"));
 
-    private int gunSlotIndex = -1;
+    public static final StreamCodec<ByteBuf, ClientMessageLaserColor> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.map(
+                    (i)-> new HashMap<>(),
+                    AttachmentType.STREAM_CODEC,
+                    ByteBufCodecs.VAR_INT
+                    ),
+            ClientMessageLaserColor::colorMap,
+            ByteBufCodecs.BOOL,
+            ClientMessageLaserColor::applyGunColor,
+            ByteBufCodecs.VAR_INT,
+            ClientMessageLaserColor::gunColor,
+            ByteBufCodecs.VAR_INT,
+            ClientMessageLaserColor::gunSlotIndex,
+            ClientMessageLaserColor::new
+    );
 
-    private ClientMessageLaserColor() {
-    }
+    public static ClientMessageLaserColor of(@NotNull ItemStack gun, int gunSlotIndex) {
+        final Map<AttachmentType, Integer> cm = new HashMap<>();
+        boolean agc = false;
+        int gc = 0;
+        int gsi = -1;
 
-    public ClientMessageLaserColor(@NotNull ItemStack gun, int gunSlotIndex) {
         if (gun.getItem() instanceof IGun iGun) {
             for (AttachmentType type : AttachmentType.values()) {
                 ItemStack attachment = iGun.getAttachment(gun, type);
                 if (attachment.getItem() instanceof IAttachment iAttachment) {
                     if (iAttachment.hasCustomLaserColor(attachment)) {
-                        colorMap.put(type, iAttachment.getLaserColor(attachment));
+                        cm.put(type, iAttachment.getLaserColor(attachment));
                     }
                 }
             }
             if (iGun.hasCustomLaserColor(gun)) {
-                this.gunColor = iGun.getLaserColor(gun);
-                this.applyGunColor = true;
+                gc = iGun.getLaserColor(gun);
+                agc = true;
             }
-            this.gunSlotIndex = gunSlotIndex;
+            gsi = gunSlotIndex;
         }
+        return new ClientMessageLaserColor(cm, agc, gc, gsi);
     }
 
-    public static void encode(ClientMessageLaserColor message, FriendlyByteBuf buf) {
-        buf.writeMap(message.colorMap, FriendlyByteBuf::writeEnum, FriendlyByteBuf::writeInt);
-        buf.writeBoolean(message.applyGunColor);
-        buf.writeInt(message.gunColor);
-        buf.writeInt(message.gunSlotIndex);
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static ClientMessageLaserColor decode(FriendlyByteBuf buf) {
-        ClientMessageLaserColor message = new ClientMessageLaserColor();
-        message.colorMap.putAll(buf.readMap(buf1 -> buf.readEnum(AttachmentType.class), FriendlyByteBuf::readInt));
-        message.applyGunColor = buf.readBoolean();
-        message.gunColor = buf.readInt();
-        message.gunSlotIndex = buf.readInt();
-        return message;
-    }
-
-    public static void handle(ClientMessageLaserColor message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isServer()) {
-            context.enqueueWork(() -> {
-                ServerPlayer player = context.getSender();
-                if (player == null || message.gunSlotIndex == -1) {
-                    return;
-                }
-                Inventory inventory = player.getInventory();
-                ItemStack gunItem = inventory.getItem(message.gunSlotIndex);
-                IGun iGun = IGun.getIGunOrNull(gunItem);
-                if (iGun != null) {
-                    for (var entry : message.colorMap.entrySet()) {
-                        AttachmentType type = entry.getKey();
-                        int color = entry.getValue();
-                        ItemStack attachment = iGun.getAttachment(gunItem, type);
-                        if (attachment.getItem() instanceof IAttachment iAttachment) {
-                            iAttachment.setLaserColor(attachment, color);
-                        }
-                    }
-                    if (message.applyGunColor) {
-                        iGun.setLaserColor(gunItem, message.gunColor);
+    public static void handle(ClientMessageLaserColor data, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            Player player = context.player();
+            Inventory inventory = player.getInventory();
+            ItemStack gunItem = inventory.getItem(data.gunSlotIndex);
+            IGun iGun = IGun.getIGunOrNull(gunItem);
+            if (iGun != null) {
+                for (var entry : data.colorMap.entrySet()) {
+                    AttachmentType type = entry.getKey();
+                    int color = entry.getValue();
+                    ItemStack attachment = iGun.getAttachment(gunItem, type);
+                    if (attachment.getItem() instanceof IAttachment iAttachment) {
+                        iAttachment.setLaserColor(attachment, color);
                     }
                 }
-            });
-        }
-        context.setPacketHandled(true);
+                if (data.applyGunColor) {
+                    iGun.setLaserColor(gunItem, data.gunColor);
+                }
+            }
+        }).exceptionally(e -> {
+            GunMod.LOGGER.error("处理Payload失败", e);
+            return null;
+        });
     }
+
+
 
 }

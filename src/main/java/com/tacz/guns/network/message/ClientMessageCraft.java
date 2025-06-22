@@ -1,44 +1,42 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.inventory.GunSmithTableMenu;
-import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
+public record ClientMessageCraft(ResourceLocation recipeId,int menuId) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<ClientMessageCraft> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_craft"));
 
-public class ClientMessageCraft {
-    private final ResourceLocation recipeId;
-    private final int menuId;
+    public static final StreamCodec<ByteBuf, ClientMessageCraft> STREAM_CODEC = StreamCodec.composite(
+            ResourceLocation.STREAM_CODEC,
+            ClientMessageCraft::recipeId,
+            ByteBufCodecs.VAR_INT,
+            ClientMessageCraft::menuId,
+            ClientMessageCraft::new
+    );
 
-    public ClientMessageCraft(ResourceLocation recipeId, int menuId) {
-        this.recipeId = recipeId;
-        this.menuId = menuId;
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ClientMessageCraft message, FriendlyByteBuf buf) {
-        buf.writeResourceLocation(message.recipeId);
-        buf.writeVarInt(message.menuId);
-    }
-
-    public static ClientMessageCraft decode(FriendlyByteBuf buf) {
-        return new ClientMessageCraft(buf.readResourceLocation(), buf.readVarInt());
-    }
-
-    public static void handle(ClientMessageCraft message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isServer()) {
-            context.enqueueWork(() -> {
-                ServerPlayer entity = context.getSender();
-                if (entity == null) {
-                    return;
-                }
-                if (entity.containerMenu.containerId == message.menuId && entity.containerMenu instanceof GunSmithTableMenu menu) {
-                    menu.doCraft(message.recipeId, entity);
-                }
-            });
-        }
-        context.setPacketHandled(true);
+    public static void handle(ClientMessageCraft data, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            Player entity = context.player();
+            if (entity.containerMenu.containerId == data.menuId && entity.containerMenu instanceof GunSmithTableMenu menu) {
+                menu.doCraft(data.recipeId, entity);
+            }
+        }).exceptionally(e -> {
+            GunMod.LOGGER.error("处理Payload失败", e);
+            return null;
+        });
     }
 }

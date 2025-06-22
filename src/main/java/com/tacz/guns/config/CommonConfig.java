@@ -3,11 +3,12 @@ package com.tacz.guns.config;
 import com.tacz.guns.config.common.AmmoConfig;
 import com.tacz.guns.config.common.GunConfig;
 import com.tacz.guns.config.common.OtherConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.fml.config.IConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class CommonConfig {
-    public static ForgeConfigSpec init() {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+    public static IConfigSpec init() {
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         GunConfig.init(builder);
         AmmoConfig.init(builder);
         OtherConfig.init(builder);

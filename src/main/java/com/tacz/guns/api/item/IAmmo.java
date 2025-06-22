@@ -1,5 +1,6 @@
 package com.tacz.guns.api.item;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -19,6 +20,8 @@ public interface IAmmo {
         }
         return null;
     }
+
+    CompoundTag getTag(ItemStack ammo);
 
     /**
      * 获取弹药 ID

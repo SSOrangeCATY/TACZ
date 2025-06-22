@@ -4,6 +4,7 @@ import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IGun;
+import com.tacz.guns.init.ModDataComponentTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -17,9 +18,17 @@ public interface AmmoItemDataAccessor extends IAmmo {
     String AMMO_ID_TAG = "AmmoId";
 
     @Override
+    default CompoundTag getTag(ItemStack ammo){
+        if(ammo.getItem() instanceof AmmoItemDataAccessor){
+            return ammo.get(ModDataComponentTypes.DATA).getUnsafe();
+        }
+        return new CompoundTag();
+    }
+
+    @Override
     @Nonnull
     default ResourceLocation getAmmoId(ItemStack ammo) {
-        CompoundTag nbt = ammo.getOrCreateTag();
+        CompoundTag nbt = getTag(ammo);
         if (nbt.contains(AMMO_ID_TAG, Tag.TAG_STRING)) {
             ResourceLocation gunId = ResourceLocation.tryParse(nbt.getString(AMMO_ID_TAG));
             return Objects.requireNonNullElse(gunId, DefaultAssets.EMPTY_AMMO_ID);
@@ -29,7 +38,7 @@ public interface AmmoItemDataAccessor extends IAmmo {
 
     @Override
     default void setAmmoId(ItemStack ammo, @Nullable ResourceLocation ammoId) {
-        CompoundTag nbt = ammo.getOrCreateTag();
+        CompoundTag nbt = getTag(ammo);
         if (ammoId != null) {
             nbt.putString(AMMO_ID_TAG, ammoId.toString());
             return;

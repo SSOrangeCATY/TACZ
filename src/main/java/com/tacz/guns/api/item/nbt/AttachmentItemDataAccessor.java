@@ -2,6 +2,7 @@ package com.tacz.guns.api.item.nbt;
 
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.item.IAttachment;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -49,15 +50,23 @@ public interface AttachmentItemDataAccessor extends IAttachment {
     }
 
     @Override
+    default CompoundTag getTag(ItemStack attachmentStack){
+        if(attachmentStack.getItem() instanceof AttachmentItemDataAccessor){
+            return attachmentStack.get(DataComponents.CUSTOM_DATA).getUnsafe();
+        }
+        return new CompoundTag();
+    }
+
+    @Override
     @Nonnull
     default ResourceLocation getAttachmentId(ItemStack attachmentStack) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         return getAttachmentIdFromTag(nbt);
     }
 
     @Override
     default void setAttachmentId(ItemStack attachmentStack, @Nullable ResourceLocation attachmentId) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         if (attachmentId != null) {
             nbt.putString(ATTACHMENT_ID_TAG, attachmentId.toString());
         }
@@ -66,7 +75,7 @@ public interface AttachmentItemDataAccessor extends IAttachment {
     @Override
     @Nullable
     default ResourceLocation getSkinId(ItemStack attachmentStack) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         if (nbt.contains(SKIN_ID_TAG, Tag.TAG_STRING)) {
             return ResourceLocation.tryParse(nbt.getString(SKIN_ID_TAG));
         }
@@ -75,7 +84,7 @@ public interface AttachmentItemDataAccessor extends IAttachment {
 
     @Override
     default void setSkinId(ItemStack attachmentStack, @Nullable ResourceLocation skinId) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         if (skinId != null) {
             nbt.putString(SKIN_ID_TAG, skinId.toString());
         } else {
@@ -85,25 +94,25 @@ public interface AttachmentItemDataAccessor extends IAttachment {
 
     @Override
     default int getZoomNumber(ItemStack attachmentStack) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         return getZoomNumberFromTag(nbt);
     }
 
     @Override
     default void setZoomNumber(ItemStack attachmentStack, int zoomNumber) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         setZoomNumberToTag(nbt, zoomNumber);
     }
 
     @Override
     default boolean hasCustomLaserColor(ItemStack attachmentStack) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         return nbt.contains(LASER_COLOR_TAG, Tag.TAG_INT);
     }
 
     @Override
     default int getLaserColor(ItemStack attachmentStack) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         if (!hasCustomLaserColor(attachmentStack)) {
             return 0xFF0000;
         }
@@ -112,7 +121,7 @@ public interface AttachmentItemDataAccessor extends IAttachment {
 
     @Override
     default void setLaserColor(ItemStack attachmentStack, int color) {
-        CompoundTag nbt = attachmentStack.getOrCreateTag();
+        CompoundTag nbt = getTag(attachmentStack);
         nbt.putInt(LASER_COLOR_TAG, color);
     }
 }

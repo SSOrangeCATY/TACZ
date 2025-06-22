@@ -1,5 +1,6 @@
 package com.tacz.guns.block;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -8,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LevelEvent;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * 双方块的枪械工作台，2x1x1
  */
 public class GunSmithTableBlockB extends AbstractGunSmithTableBlock {
+    public static final MapCodec<AbstractGunSmithTableBlock> CODEC = simpleCodec((p)-> new GunSmithTableBlockB());
     public static final EnumProperty<BedPart> PART = BlockStateProperties.BED_PART;
 
     public GunSmithTableBlockB() {
@@ -48,7 +51,7 @@ public class GunSmithTableBlockB extends AbstractGunSmithTableBlock {
         if (level.getBlockState(relative).canBeReplaced(context) && level.getWorldBorder().isWithinBounds(relative)) {
             return this.defaultBlockState().setValue(FACING, direction);
         }
-        return null;
+        return this.defaultBlockState();
     }
 
     @Override
@@ -63,7 +66,7 @@ public class GunSmithTableBlockB extends AbstractGunSmithTableBlock {
     }
 
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState blockState, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState blockState, Player player) {
         // 用于抑制创造模式下摧毁head方块时foot的掉落
         if (!level.isClientSide && player.isCreative()) {
             BedPart bedPart = blockState.getValue(PART);
@@ -77,6 +80,7 @@ public class GunSmithTableBlockB extends AbstractGunSmithTableBlock {
             }
         }
         super.playerWillDestroy(level, pos, blockState, player);
+        return blockState;
     }
 
     @Override
@@ -101,5 +105,10 @@ public class GunSmithTableBlockB extends AbstractGunSmithTableBlock {
     @Override
     public BlockPos getRootPos(BlockPos pos, BlockState blockState) {
         return blockState.getValue(PART).equals(BedPart.FOOT) ? pos : pos.relative(getNeighbourDirection(BedPart.HEAD, blockState.getValue(FACING)));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 }

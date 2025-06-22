@@ -1,5 +1,6 @@
 package com.tacz.guns.block;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -8,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LevelEvent;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * 双方块的枪械工作台，1x2x1
  */
 public class GunSmithTableBlockC extends AbstractGunSmithTableBlock {
+    public static final MapCodec<AbstractGunSmithTableBlock> CODEC = simpleCodec((p)-> new GunSmithTableBlockC());
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
     public GunSmithTableBlockC() {
@@ -45,7 +48,7 @@ public class GunSmithTableBlockC extends AbstractGunSmithTableBlock {
         if (level.getBlockState(above).canBeReplaced(context) && level.getWorldBorder().isWithinBounds(above)) {
             return this.defaultBlockState().setValue(FACING, direction);
         }
-        return null;
+        return this.defaultBlockState();
     }
 
     @Override
@@ -76,10 +79,10 @@ public class GunSmithTableBlockC extends AbstractGunSmithTableBlock {
     }
 
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState blockState, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         // 用于抑制创造模式下摧毁upper方块时lower的掉落
         if (!level.isClientSide && player.isCreative()) {
-            DoubleBlockHalf half = blockState.getValue(HALF);
+            DoubleBlockHalf half = state.getValue(HALF);
             if (half == DoubleBlockHalf.UPPER) {
                 BlockPos blockpos = pos.below();
                 BlockState blockstate = level.getBlockState(blockpos);
@@ -89,7 +92,7 @@ public class GunSmithTableBlockC extends AbstractGunSmithTableBlock {
                 }
             }
         }
-        super.playerWillDestroy(level, pos, blockState, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override
@@ -100,5 +103,10 @@ public class GunSmithTableBlockC extends AbstractGunSmithTableBlock {
     @Override
     public BlockPos getRootPos(BlockPos pos, BlockState blockState) {
         return blockState.getValue(HALF).equals(DoubleBlockHalf.LOWER) ? pos : pos.below();
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 }

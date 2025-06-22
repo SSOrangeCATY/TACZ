@@ -1,6 +1,10 @@
 package com.tacz.guns.api.item.attachment;
 
 import com.google.gson.annotations.SerializedName;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.VarInt;
+import net.minecraft.network.codec.StreamCodec;
+import org.jetbrains.annotations.NotNull;
 
 public enum AttachmentType {
     /**
@@ -36,5 +40,16 @@ public enum AttachmentType {
     /**
      * 用来表示物品不是配件的情况。
      */
-    NONE
+    NONE;
+
+   public static final StreamCodec<ByteBuf, AttachmentType> STREAM_CODEC = new StreamCodec<>() {
+        public @NotNull AttachmentType decode(@NotNull ByteBuf buf) {
+            return AttachmentType.values()[VarInt.read(buf)];
+        }
+
+        public void encode(@NotNull ByteBuf buf, AttachmentType type) {
+            VarInt.write(buf, type.ordinal());
+        }
+    };
+
 }

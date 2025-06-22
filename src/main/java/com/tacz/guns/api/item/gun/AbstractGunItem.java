@@ -20,18 +20,21 @@ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraft.world.item.component.CustomData;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -109,7 +112,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
      * @param yaw 射击方向
      */
     public void doBulletSpread(ShooterDataHolder dataHolder, ItemStack gunItem, LivingEntity shooter, Projectile projectile,
-                                        int bulletCnt, float processedSpeed, float inaccuracy, float pitch, float yaw) {
+                               int bulletCnt, float processedSpeed, float inaccuracy, float pitch, float yaw) {
         projectile.shootFromRotation(shooter, pitch, yaw, 0.0F, processedSpeed, inaccuracy);
     }
 
@@ -144,19 +147,20 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
             return getDummyAmmoAmount(gunItem) > 0;
         }
         // 检查背包内的弹药数量
-        return shooter.getCapability(ForgeCapabilities.ITEM_HANDLER, null).map(cap -> {
-            // 背包检查
-            for (int i = 0; i < cap.getSlots(); i++) {
-                ItemStack checkAmmoStack = cap.getStackInSlot(i);
-                if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(gunItem, checkAmmoStack)) {
-                    return true;
-                }
-                if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(gunItem, checkAmmoStack)) {
-                    return true;
-                }
+        IItemHandler handler = shooter.getCapability(Capabilities.ItemHandler.ENTITY, null);
+        if(handler == null) return false;
+        // 背包检查
+        for (int i = 0; i < handler.getSlots(); i++) {
+            ItemStack checkAmmoStack = handler.getStackInSlot(i);
+            if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(gunItem, checkAmmoStack)) {
+                return true;
             }
-            return false;
-        }).orElse(false);
+            if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(gunItem, checkAmmoStack)) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     /**
@@ -339,7 +343,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
             if (key.equals(indexType)) {
                 ItemStack itemStack = GunItemBuilder.create()
                         .setId(entry.getKey())
-                        .setFireMode(gunData.getFireModeSet().get(0))
+                        .setFireMode(gunData.getFireModeSet().getFirst())
                         .setAmmoCount(gunData.getAmmoAmount())
                         .setHeatData(gunData.hasHeatData())
                         .setAmmoInBarrel(true)
@@ -354,15 +358,16 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
      * 阻止玩家手臂挥动
      */
     @Override
-    public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
+    public boolean onEntitySwing(@NotNull ItemStack stack, @NotNull LivingEntity entity, @NotNull InteractionHand hand) {
         return true;
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
             @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 return new GunItemRendererWrapper();
             }
         });
@@ -424,19 +429,20 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
             return getDummyAmmoAmount(gun) > 0;
         }
         // 检查背包内的弹药数量
-        return shooter.getCapability(ForgeCapabilities.ITEM_HANDLER, null).map(cap -> {
-            // 背包检查
-            for (int i = 0; i < cap.getSlots(); i++) {
-                ItemStack checkAmmoStack = cap.getStackInSlot(i);
-                if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(gun, checkAmmoStack)) {
-                    return true;
-                }
-                if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(gun, checkAmmoStack)) {
-                    return true;
-                }
+
+        IItemHandler handler = shooter.getCapability(Capabilities.ItemHandler.ENTITY, null);
+        if(handler == null) return false;
+        // 背包检查
+        for (int i = 0; i < handler.getSlots(); i++) {
+            ItemStack checkAmmoStack = handler.getStackInSlot(i);
+            if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(gun, checkAmmoStack)) {
+                return true;
             }
-            return false;
-        }).orElse(false);
+            if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(gun, checkAmmoStack)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

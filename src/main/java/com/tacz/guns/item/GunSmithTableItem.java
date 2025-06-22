@@ -5,6 +5,7 @@ import com.tacz.guns.api.item.builder.BlockItemBuilder;
 import com.tacz.guns.api.item.nbt.BlockItemDataAccessor;
 import com.tacz.guns.client.renderer.item.GunSmithTableItemRenderer;
 import com.tacz.guns.client.resource.index.ClientBlockIndex;
+import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.inventory.tooltip.BlockItemTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -15,10 +16,11 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -27,14 +29,15 @@ import java.util.function.Consumer;
 
 public class GunSmithTableItem extends BlockItem implements BlockItemDataAccessor {
     public GunSmithTableItem(Block block) {
-        super(block, (new Item.Properties()).stacksTo(1));
+        super(block, (new Item.Properties()).stacksTo(1).component(ModDataComponentTypes.DATA, CustomData.EMPTY));
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
             @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 Minecraft minecraft = Minecraft.getInstance();
                 return new GunSmithTableItemRenderer(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
             }
@@ -82,7 +85,7 @@ public class GunSmithTableItem extends BlockItem implements BlockItemDataAccesso
 
     @Override
     @NotNull
-    public Optional<TooltipComponent> getTooltipImage(ItemStack pStack) {
+    public Optional<TooltipComponent> getTooltipImage(@NotNull ItemStack pStack) {
         return Optional.of(new BlockItemTooltip(this.getBlockId(pStack)));
     }
 }

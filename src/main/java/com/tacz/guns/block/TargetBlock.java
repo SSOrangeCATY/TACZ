@@ -1,11 +1,13 @@
 package com.tacz.guns.block;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.serialization.MapCodec;
 import com.tacz.guns.block.entity.TargetBlockEntity;
 import com.tacz.guns.entity.EntityKineticBullet;
 import com.tacz.guns.init.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -14,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -23,6 +26,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.*;
@@ -35,7 +39,10 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public class TargetBlock extends BaseEntityBlock {
+    public static final MapCodec<TargetBlock> CODEC = simpleCodec(p-> new TargetBlock());
     public static final IntegerProperty OUTPUT_POWER = BlockStateProperties.POWER;
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
@@ -170,7 +177,7 @@ public class TargetBlock extends BaseEntityBlock {
         if (level.getBlockState(above).canBeReplaced(context) && level.getWorldBorder().isWithinBounds(above)) {
             return this.defaultBlockState().setValue(FACING, direction);
         }
-        return null;
+        return this.defaultBlockState();
     }
 
     @Override
@@ -181,24 +188,31 @@ public class TargetBlock extends BaseEntityBlock {
             world.setBlock(above, state.setValue(HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
             world.blockUpdated(pos, Blocks.AIR);
             state.updateNeighbourShapes(world, pos, Block.UPDATE_ALL);
-            if (stack.hasCustomHoverName()) {
+            if (stack.get(DataComponents.CUSTOM_NAME) != null) {
                 BlockEntity blockentity = world.getBlockEntity(pos);
                 if (blockentity instanceof TargetBlockEntity e) {
-                    GameProfile gameprofile = new GameProfile(null, stack.getHoverName().getString());
-                    e.setOwner(gameprofile);
-                    e.setCustomName(stack.getHoverName());
-                    e.refresh();
+                    SkullBlockEntity.fetchGameProfile(stack.getHoverName().getString()).thenAccept((p)->{
+                        p.ifPresent(profile->{
+                            e.setOwner(new ResolvableProfile(profile));
+                            e.setCustomName(stack.getHoverName());
+                            e.refresh();
+                        });
+                    });
                 }
             }
         }
     }
 
+
+
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         BlockPos blockPos = state.getValue(HALF) == DoubleBlockHalf.LOWER ? pos : pos.below();
         BlockEntity blockentity = level.getBlockEntity(blockPos);
         if (blockentity instanceof TargetBlockEntity e) {
-            return new ItemStack(this).setHoverName(e.getCustomName());
+            ItemStack itemStack = new ItemStack(this);
+            itemStack.set(DataComponents.CUSTOM_NAME,e.getCustomName());
+            return itemStack;
         }
         return super.getCloneItemStack(state, target, level, pos, player);
     }
@@ -230,6 +244,11 @@ public class TargetBlock extends BaseEntityBlock {
                 level.setBlock(pos, state.setValue(OUTPUT_POWER, 0), Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
             }
         }
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override

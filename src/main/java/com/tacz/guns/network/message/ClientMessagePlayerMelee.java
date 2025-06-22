@@ -1,31 +1,31 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.entity.IGunOperator;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
+public class ClientMessagePlayerMelee implements CustomPacketPayload {
+    public static final Type<ClientMessagePlayerMelee> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_melee"));
 
-public class ClientMessagePlayerMelee {
-    public static void encode(ClientMessagePlayerMelee message, FriendlyByteBuf buf) {
+    public static final StreamCodec<ByteBuf, ClientMessagePlayerMelee> STREAM_CODEC = StreamCodec.unit(new ClientMessagePlayerMelee());
+
+    public static void handle(ClientMessagePlayerMelee data, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            IGunOperator.fromLivingEntity(context.player()).fireSelect();
+        }).exceptionally(e -> {
+            GunMod.LOGGER.error("处理Payload失败", e);
+            return null;
+        });
     }
 
-    public static ClientMessagePlayerMelee decode(FriendlyByteBuf buf) {
-        return new ClientMessagePlayerMelee();
-    }
-
-    public static void handle(ClientMessagePlayerMelee message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isServer()) {
-            context.enqueueWork(() -> {
-                ServerPlayer entity = context.getSender();
-                if (entity == null) {
-                    return;
-                }
-                IGunOperator.fromLivingEntity(entity).melee();
-            });
-        }
-        context.setPacketHandled(true);
+    @Override
+    public @NotNull CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

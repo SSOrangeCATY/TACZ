@@ -1,37 +1,37 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.entity.IGunOperator;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
+public class ClientMessagePlayerDrawGun implements CustomPacketPayload {
+    public static final Type<ClientMessagePlayerDrawGun> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_draw_gun"));
 
-public class ClientMessagePlayerDrawGun {
-    public ClientMessagePlayerDrawGun() {
+    public static final StreamCodec<ByteBuf, ClientMessagePlayerDrawGun> STREAM_CODEC = StreamCodec.unit(new ClientMessagePlayerDrawGun());
+
+    public static void handle(ClientMessagePlayerDrawGun data, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            Player player = context.player();
+            Inventory inventory = player.getInventory();
+            int selected = inventory.selected;
+            IGunOperator.fromLivingEntity(player).draw(() -> inventory.getItem(selected));
+        }).exceptionally(e -> {
+            GunMod.LOGGER.error("处理Payload失败", e);
+            return null;
+        });
     }
 
-    public static void encode(ClientMessagePlayerDrawGun message, FriendlyByteBuf buf) {
-    }
-
-    public static ClientMessagePlayerDrawGun decode(FriendlyByteBuf buf) {
-        return new ClientMessagePlayerDrawGun();
-    }
-
-    public static void handle(ClientMessagePlayerDrawGun message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isServer()) {
-            context.enqueueWork(() -> {
-                ServerPlayer entity = context.getSender();
-                if (entity == null) {
-                    return;
-                }
-                Inventory inventory = entity.getInventory();
-                int selected = inventory.selected;
-                IGunOperator.fromLivingEntity(entity).draw(() -> inventory.getItem(selected));
-            });
-        }
-        context.setPacketHandled(true);
+    @Override
+    public @NotNull CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }
