@@ -33,8 +33,11 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -50,6 +53,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -60,6 +64,7 @@ import net.neoforged.fml.LogicalSide;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.entity.PartEntity;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -74,6 +79,74 @@ import static com.tacz.guns.api.event.common.GunDamageSourcePart.NON_ARMOR_PIERC
  * 动能武器打出的子弹实体。
  */
 public class EntityKineticBullet extends Projectile {
+    public static final StreamCodec<RegistryFriendlyByteBuf, EntityKineticBullet> STREAM_CODEC = StreamCodec.composite(
+            // 第一组：运动数据
+            MotionData.CODEC,
+            entity -> new MotionData(
+                    entity.getXRot(),
+                    entity.getYRot(),
+                    entity.getDeltaMovement(),
+                    entity.getOwner() != null ? entity.getOwner().getId() : 0
+            ),
+
+            // 第二组：弹药属性
+            AmmoProperties.CODEC,
+            entity -> new AmmoProperties(
+                    entity.ammoId,
+                    entity.gravity,
+                    entity.explosion,
+                    entity.igniteEntity,
+                    entity.igniteBlock
+            ),
+
+            // 第三组：爆炸属性
+            ExplosionProperties.CODEC,
+            entity -> new ExplosionProperties(
+                    entity.explosionRadius,
+                    entity.explosionDamage
+            ),
+
+            // 第四组：子弹行为
+            BulletBehavior.CODEC,
+            entity -> new BulletBehavior(
+                    entity.life,
+                    entity.speed,
+                    entity.friction,
+                    entity.pierce
+            ),
+
+            // 第五组：枪械信息
+            GunInfo.CODEC,
+            entity -> new GunInfo(
+                    entity.isTracerAmmo,
+                    entity.gunId,
+                    entity.gunDisplayId
+            ),
+
+            // 构造函数
+            (motion, ammo, explosion, behavior, gun) -> {
+                EntityKineticBullet bullet = new EntityKineticBullet(EntityType.ARROW, 0, 0, 0, null);
+                bullet.setXRot(motion.xRot());
+                bullet.setYRot(motion.yRot());
+                bullet.setDeltaMovement(motion.deltaMovement());
+                bullet.ammoId = ammo.ammoId();
+                bullet.gravity = ammo.gravity();
+                bullet.explosion = ammo.explosion();
+                bullet.igniteEntity = ammo.igniteEntity();
+                bullet.igniteBlock = ammo.igniteBlock();
+                bullet.explosionRadius = explosion.explosionRadius();
+                bullet.explosionDamage = explosion.explosionDamage();
+                bullet.life = behavior.life();
+                bullet.speed = behavior.speed();
+                bullet.friction = behavior.friction();
+                bullet.pierce = behavior.pierce();
+                bullet.isTracerAmmo = gun.isTracerAmmo();
+                bullet.gunId = gun.gunId();
+                bullet.gunDisplayId = gun.gunDisplayId();
+                return bullet;
+            }
+    );
+
     public static final EntityType<EntityKineticBullet> TYPE = EntityType.Builder.<EntityKineticBullet>of(EntityKineticBullet::new, MobCategory.MISC).noSummon().noSave().fireImmune().sized(0.0625F, 0.0625F).clientTrackingRange(5).updateInterval(5).setShouldReceiveVelocityUpdates(false).build("bullet");
     public static final TagKey<EntityType<?>> USE_MAGIC_DAMAGE_ON = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse("tacz:use_magic_damage_on"));
     public static final TagKey<EntityType<?>> USE_VOID_DAMAGE_ON = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse("tacz:use_void_damage_on"));
@@ -204,7 +277,7 @@ public class EntityKineticBullet extends Projectile {
 
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+    protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
 
     }
 
@@ -378,7 +451,7 @@ public class EntityKineticBullet extends Projectile {
         float headShotMultiplier = Math.max(this.headShot, 0);
         // 发布Pre事件
         var preEvent = new EntityHurtByGunEvent.Pre(this, entity, attacker, this.gunId, this.gunDisplayId, damage, sources, headshot, headShotMultiplier, LogicalSide.SERVER);
-        var cancelled = NeoForge.EVENT_BUS.post(preEvent);
+        var cancelled = NeoForge.EVENT_BUS.post(preEvent).isCanceled();
         if (cancelled) {
             return;
         }
@@ -397,7 +470,7 @@ public class EntityKineticBullet extends Projectile {
         }
         // 点燃
         if (this.igniteEntity && AmmoConfig.IGNITE_ENTITY.get()) {
-            entity.setSecondsOnFire(this.igniteEntityTime);
+            entity.setRemainingFireTicks(this.igniteEntityTime);
             // 给予粒子效果
             if (this.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.LAVA, entity.getX(), entity.getY() + entity.getEyeHeight(), entity.getZ(), 1, 0, 0, 0, 0);
@@ -434,10 +507,10 @@ public class EntityKineticBullet extends Projectile {
                 int attackerId = attacker == null ? 0 : attacker.getId();
                 // 如果生物死了
                 if (livingCore.isDeadOrDying()) {
-                    MinecraftForge.EVENT_BUS.post(new EntityKillByGunEvent(this, livingCore, attacker, newGunId, gunDisplayId, damage, sources, headshot, headShotMultiplier, LogicalSide.SERVER));
+                    NeoForge.EVENT_BUS.post(new EntityKillByGunEvent(this, livingCore, attacker, newGunId, gunDisplayId, damage, sources, headshot, headShotMultiplier, LogicalSide.SERVER));
                     NetworkHandler.sendToDimension(new ServerMessageGunKill(getId(), livingCore.getId(), attackerId, newGunId, gunDisplayId, damage, headshot, headShotMultiplier), livingCore);
                 } else {
-                    MinecraftForge.EVENT_BUS.post(new EntityHurtByGunEvent.Post(this, livingCore, attacker, newGunId, gunDisplayId, damage, sources, headshot, headShotMultiplier, LogicalSide.SERVER));
+                    NeoForge.EVENT_BUS.post(new EntityHurtByGunEvent.Post(this, livingCore, attacker, newGunId, gunDisplayId, damage, sources, headshot, headShotMultiplier, LogicalSide.SERVER));
                     NetworkHandler.sendToDimension(new ServerMessageGunHurt(getId(), livingCore.getId(), attackerId, newGunId, gunDisplayId, damage, headshot, headShotMultiplier), livingCore);
                 }
             }
@@ -452,7 +525,7 @@ public class EntityKineticBullet extends Projectile {
         Vec3 hitVec = result.getLocation();
         // 触发事件
         // 提前触发事件以让事件可以取消原版的命中行为（例如敲钟，打倒靶子等）
-        if (MinecraftForge.EVENT_BUS.post(new AmmoHitBlockEvent(this.level(), result, this.level().getBlockState(pos), this))) {
+        if (NeoForge.EVENT_BUS.post(new AmmoHitBlockEvent(this.level(), result, this.level().getBlockState(pos), this)).isCanceled()) {
             return;
         }
         super.onHitBlock(result);
@@ -531,61 +604,6 @@ public class EntityKineticBullet extends Projectile {
         parts.core().invulnerableTime = 0;
         // 穿甲伤害
         parts.hitPart().hurt(source2, damage * armorDamagePercent);
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
-
-    @Override
-    public void writeSpawnData(FriendlyByteBuf buffer) {
-        buffer.writeFloat(getXRot());
-        buffer.writeFloat(getYRot());
-        buffer.writeDouble(getDeltaMovement().x);
-        buffer.writeDouble(getDeltaMovement().y);
-        buffer.writeDouble(getDeltaMovement().z);
-        Entity entity = getOwner();
-        buffer.writeInt(entity != null ? entity.getId() : 0);
-        buffer.writeResourceLocation(ammoId);
-        buffer.writeFloat(this.gravity);
-        buffer.writeBoolean(this.explosion);
-        buffer.writeBoolean(this.igniteEntity);
-        buffer.writeBoolean(this.igniteBlock);
-        buffer.writeFloat(this.explosionRadius);
-        buffer.writeFloat(this.explosionDamage);
-        buffer.writeInt(this.life);
-        buffer.writeFloat(this.speed);
-        buffer.writeFloat(this.friction);
-        buffer.writeInt(this.pierce);
-        buffer.writeBoolean(this.isTracerAmmo);
-        buffer.writeResourceLocation(this.gunId);
-        buffer.writeResourceLocation(this.gunDisplayId);
-    }
-
-    @Override
-    public void readSpawnData(FriendlyByteBuf additionalData) {
-        setXRot(additionalData.readFloat());
-        setYRot(additionalData.readFloat());
-        setDeltaMovement(additionalData.readDouble(), additionalData.readDouble(), additionalData.readDouble());
-        Entity entity = this.level().getEntity(additionalData.readInt());
-        if (entity != null) {
-            this.setOwner(entity);
-        }
-        this.ammoId = additionalData.readResourceLocation();
-        this.gravity = additionalData.readFloat();
-        this.explosion = additionalData.readBoolean();
-        this.igniteEntity = additionalData.readBoolean();
-        this.igniteBlock = additionalData.readBoolean();
-        this.explosionRadius = additionalData.readFloat();
-        this.explosionDamage = additionalData.readFloat();
-        this.life = additionalData.readInt();
-        this.speed = additionalData.readFloat();
-        this.friction = additionalData.readFloat();
-        this.pierce = additionalData.readInt();
-        this.isTracerAmmo = additionalData.readBoolean();
-        this.gunId = additionalData.readResourceLocation();
-        this.gunDisplayId = additionalData.readResourceLocation();
     }
 
     public ResourceLocation getAmmoId() {
@@ -707,5 +725,81 @@ public class EntityKineticBullet extends Projectile {
         public boolean isHeadshot() {
             return this.headshot;
         }
+    }
+
+    // 运动数据分组
+    public record MotionData(
+            float xRot,
+            float yRot,
+            Vec3 deltaMovement,
+            int ownerId
+    ) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, MotionData> CODEC = StreamCodec.composite(
+                ByteBufCodecs.FLOAT, MotionData::xRot,
+                ByteBufCodecs.FLOAT, MotionData::yRot,
+                ByteBufCodecs.fromCodec(Vec3.CODEC), MotionData::deltaMovement,
+                ByteBufCodecs.INT, MotionData::ownerId,
+                MotionData::new
+        );
+    }
+
+    // 弹药属性
+    public record AmmoProperties(
+            ResourceLocation ammoId,
+            float gravity,
+            boolean explosion,
+            boolean igniteEntity,
+            boolean igniteBlock
+    ) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, AmmoProperties> CODEC = StreamCodec.composite(
+                ResourceLocation.STREAM_CODEC, AmmoProperties::ammoId,
+                ByteBufCodecs.FLOAT, AmmoProperties::gravity,
+                ByteBufCodecs.BOOL, AmmoProperties::explosion,
+                ByteBufCodecs.BOOL, AmmoProperties::igniteEntity,
+                ByteBufCodecs.BOOL, AmmoProperties::igniteBlock,
+                AmmoProperties::new
+        );
+    }
+
+    // 爆炸属性
+    public record ExplosionProperties(
+            float explosionRadius,
+            float explosionDamage
+    ) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, ExplosionProperties> CODEC = StreamCodec.composite(
+                ByteBufCodecs.FLOAT, ExplosionProperties::explosionRadius,
+                ByteBufCodecs.FLOAT, ExplosionProperties::explosionDamage,
+                ExplosionProperties::new
+        );
+    }
+
+    // 子弹行为
+    public record BulletBehavior(
+            int life,
+            float speed,
+            float friction,
+            int pierce
+    ) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, BulletBehavior> CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, BulletBehavior::life,
+                ByteBufCodecs.FLOAT, BulletBehavior::speed,
+                ByteBufCodecs.FLOAT, BulletBehavior::friction,
+                ByteBufCodecs.INT, BulletBehavior::pierce,
+                BulletBehavior::new
+        );
+    }
+
+    // 枪械信息
+    public record GunInfo(
+            boolean isTracerAmmo,
+            ResourceLocation gunId,
+            ResourceLocation gunDisplayId
+    ) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, GunInfo> CODEC = StreamCodec.composite(
+                ByteBufCodecs.BOOL, GunInfo::isTracerAmmo,
+                ResourceLocation.STREAM_CODEC, GunInfo::gunId,
+                ResourceLocation.STREAM_CODEC, GunInfo::gunDisplayId,
+                GunInfo::new
+        );
     }
 }

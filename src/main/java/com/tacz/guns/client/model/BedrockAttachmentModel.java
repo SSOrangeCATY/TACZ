@@ -241,7 +241,7 @@ public class BedrockAttachmentModel extends BedrockAnimatedModel {
 
     private void renderOcularAndDivision(PoseStack matrixStack, ItemDisplayContext transformType, RenderType renderType, int light, int overlay, boolean selective) {
         if (!ocularNodePaths.isEmpty()) {
-            BufferBuilder builder = Tesselator.getInstance().getBuilder();
+            BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
             // 准备渲染圆形模板层
             RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_INVERT);
             RenderSystem.colorMask(false, false, false, false);
@@ -250,7 +250,7 @@ public class BedrockAttachmentModel extends BedrockAnimatedModel {
             float rad = 80 * scopeViewRadiusModifier;
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                rad *= IClientPlayerGunOperator.fromLocalPlayer(player).getClientAimingProgress(Minecraft.getInstance().getFrameTime());
+                rad *= IClientPlayerGunOperator.fromLocalPlayer(player).getClientAimingProgress(Minecraft.getInstance().getFrameTimeNs());
             }
             for (int i = 0; i < ocularNodePaths.size(); i++) {
                 if (selective && !isScopeOcular.get(i)) {
@@ -260,15 +260,14 @@ public class BedrockAttachmentModel extends BedrockAnimatedModel {
                 Vector3f ocularCenter = getBedrockPartCenter(matrixStack, ocularNodePaths.get(i));
                 float centerX = ocularCenter.x() * 16 * 90;
                 float centerY = ocularCenter.y() * 16 * 90;
-                builder.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
-                builder.vertex(centerX, centerY, -90.0D).color(255, 255, 255, 255).endVertex();
+                builder.addVertex(centerX, centerY, -90f).setColor(255, 255, 255, 255);
                 for (int j = 0; j <= 90; j++) {
                     float angle = (float) j * ((float) Math.PI * 2F) / 90.0F;
                     float sin = Mth.sin(angle);
                     float cos = Mth.cos(angle);
-                    builder.vertex(centerX + cos * rad, centerY + sin * rad, -90.0D).color(255, 255, 255, 255).endVertex();
+                    builder.addVertex(centerX + cos * rad, centerY + sin * rad, -90f).setColor(255, 255, 255, 255);
                 }
-                BufferUploader.drawWithShader(builder.end());
+                BufferUploader.drawWithShader(builder.build());
             }
             RenderSystem.depthMask(true);
             RenderSystem.colorMask(true, true, true, true);

@@ -18,25 +18,6 @@ public class PreLoadConfig {
         builder.pop();
         spec = builder.build();
     }
-ModConfig
-
-    public static PreLoadModConfig getModConfig() {
-        ModLoadingContext ctx = ModLoadingContext.get();
-        var c = new PreLoadModConfig(ModConfig.Type.COMMON, spec, ctx.getActiveContainer(), "tacz-pre.toml");
-        // 从 ConfigTracker 中移除，防止从默认文件夹重复加载
-        ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON).remove(c);
-        ConfigTracker.INSTANCE.fileMap().remove(c.getFileName(), c);
-        return c;
-    }
-
-    public static void load(Path configBasePath) {
-        if (spec.isLoaded()) return;
-        PreLoadModConfig config = getModConfig();
-        final CommentedFileConfig configData = config.getHandler().reader(configBasePath).apply(config);
-        config.setConfigData(configData);
-        config.fireEvent(IConfigEvent.loading(config));
-        config.save();
-    }
 
     public static ModConfigSpec getSpec() {
         return spec;

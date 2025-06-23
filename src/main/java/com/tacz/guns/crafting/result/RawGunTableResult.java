@@ -1,15 +1,23 @@
 package com.tacz.guns.crafting.result;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.attachment.AttachmentType;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
+import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.pojo.data.block.TabConfig;
 import com.tacz.guns.resource.pojo.data.recipe.GunResult;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Locale;
+import java.util.Optional;
 
 
 /**
@@ -24,6 +33,40 @@ import java.util.Locale;
  * 等待到实际需要使用配方时再进行初始化
  */
 public class RawGunTableResult {
+    public static final Codec<RawGunTableResult> CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Codec.STRING.fieldOf("type").forGetter(RawGunTableResult::getType),
+                    Codec.INT.fieldOf("count").forGetter(RawGunTableResult::getCount),
+                    ResourceLocation.CODEC.fieldOf("id").forGetter(RawGunTableResult::getId),
+                    GunResult.CODEC.optionalFieldOf("extraData").forGetter(r -> Optional.ofNullable(r.extraData)),
+                    CompoundTag.CODEC.optionalFieldOf("nbt").forGetter(r -> Optional.ofNullable(r.nbt))
+            ).apply(instance, (type, count, id, extraDataOpt, nbtOpt) -> {
+                RawGunTableResult result = new RawGunTableResult(type, id, count);
+                extraDataOpt.ifPresent(result::setExtraData);
+                nbtOpt.ifPresent(result::setNbt);
+                return result;
+            })
+    );
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, RawGunTableResult> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.STRING_UTF8,
+            RawGunTableResult::getType,
+            ByteBufCodecs.VAR_INT,
+            RawGunTableResult::getCount,
+            ResourceLocation.STREAM_CODEC,
+            RawGunTableResult::getId,
+            ByteBufCodecs.optional(GunResult.STREAM_CODEC),
+            result -> Optional.ofNullable(result.extraData),
+            ByteBufCodecs.optional(ByteBufCodecs.COMPOUND_TAG),
+            result -> Optional.ofNullable(result.nbt),
+            (type, count, id, extraDataOpt, nbtOpt) -> {
+                RawGunTableResult result = new RawGunTableResult(type, id, count);
+                extraDataOpt.ifPresent(result::setExtraData);
+                nbtOpt.ifPresent(result::setNbt);
+                return result;
+            }
+    );
+
     private final String type;
     private final int count;
     private final ResourceLocation id;
@@ -53,8 +96,9 @@ public class RawGunTableResult {
             case GunSmithTableResult.ATTACHMENT -> raw.getAttachmentStack();
             default -> new GunSmithTableResult(ItemStack.EMPTY, TabConfig.TAB_EMPTY);
         };
-        if (raw.nbt != null) {
-            CompoundTag itemTag = result.getResult().getOrCreateTag();
+
+        if (raw.nbt != null && !result.getResult().isEmpty()) {
+            CompoundTag itemTag = result.getResult().get(ModDataComponentTypes.DATA).getUnsafe();
             for (String key : raw.nbt.getAllKeys()) {
                 Tag tag = raw.nbt.get(key);
                 if (tag != null) {
@@ -83,7 +127,7 @@ public class RawGunTableResult {
                     .setAmmoCount(ammoCount)
                     .setAmmoInBarrel(false)
                     .putAllAttachment(attachments)
-                    .setFireMode(gunIndex.getGunData().getFireModeSet().get(0)).build();
+                    .setFireMode(gunIndex.getGunData().getFireModeSet().getFirst()).build();
             String raw = gunIndex.getType();
             if (!raw.contains(":")) {
                 raw = GunMod.MOD_ID + ":" + raw;
@@ -107,5 +151,25 @@ public class RawGunTableResult {
             ResourceLocation group = ResourceLocation.tryParse(raw);
             return new GunSmithTableResult(itemStack, group);
         }).orElse(new GunSmithTableResult(ItemStack.EMPTY, TabConfig.TAB_EMPTY));
+    }
+
+    public @Nullable CompoundTag getNbt() {
+        return nbt;
+    }
+
+    public @Nullable GunResult getExtraData() {
+        return extraData;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public ResourceLocation getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
     }
 }

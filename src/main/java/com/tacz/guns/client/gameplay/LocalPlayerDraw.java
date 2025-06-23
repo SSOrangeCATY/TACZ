@@ -6,13 +6,14 @@ import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.client.renderer.item.AnimateGeoItemRenderer;
 import com.tacz.guns.client.sound.SoundPlayManager;
 import com.tacz.guns.network.NetworkHandler;
+import com.tacz.guns.network.message.ClientMessagePlayerDrawGun;
 import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.LogicalSide;
+import net.neoforged.fml.LogicalSide;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.concurrent.TimeUnit;
 
@@ -42,12 +43,8 @@ public class LocalPlayerDraw {
         }
         long putAwayTime = Math.abs(drawTime);
 
-        // 发包通知服务器
-        if (Minecraft.getInstance().gameMode != null) {
-            Minecraft.getInstance().gameMode.ensureHasSentCarriedItem();
-        }
-        NetworkHandler.CHANNEL.sendToServer(new ClientMessagePlayerDrawGun());
-        MinecraftForge.EVENT_BUS.post(new GunDrawEvent(player, lastItem, currentItem, LogicalSide.CLIENT));
+        NetworkHandler.sendToServer(new ClientMessagePlayerDrawGun());
+        NeoForge.EVENT_BUS.post(new GunDrawEvent(player, lastItem, currentItem, LogicalSide.CLIENT));
 
         // 不处于收枪状态时才能收枪
         if (drawTime >= 0) {

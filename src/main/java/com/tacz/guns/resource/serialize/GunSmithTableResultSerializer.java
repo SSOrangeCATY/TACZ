@@ -1,6 +1,7 @@
 package com.tacz.guns.resource.serialize;
 
 import com.google.gson.*;
+import com.mojang.serialization.JsonOps;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.crafting.result.GunSmithTableResult;
 import com.tacz.guns.crafting.result.RawGunTableResult;
@@ -11,7 +12,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.crafting.CraftingHelper;
 
 import java.lang.reflect.Type;
 
@@ -30,7 +30,7 @@ public class GunSmithTableResultSerializer implements JsonDeserializer<GunSmithT
                 count = Math.max(GsonHelper.getAsInt(jsonObject, "count"), 1);
             }
             if (jsonObject.has("nbt")) {
-                extraTag = CraftingHelper.getNBT(jsonObject.get("nbt"));
+                extraTag = CompoundTag.CODEC.decode(JsonOps.INSTANCE, jsonObject.get("nbt")).getOrThrow().getFirst();
             }
             if (jsonObject.has("group")) {
                 String raw = GsonHelper.getAsString(jsonObject, "group");
@@ -58,7 +58,7 @@ public class GunSmithTableResultSerializer implements JsonDeserializer<GunSmithT
                 }
                 case GunSmithTableResult.CUSTOM -> {
                     JsonObject resultObject = GsonHelper.getAsJsonObject(jsonObject, "item");
-                    ItemStack itemStack = CraftingHelper.getItemStack(resultObject, true);
+                    ItemStack itemStack = ItemStack.CODEC.decode(JsonOps.INSTANCE, resultObject).getOrThrow().getFirst();
                     result = new GunSmithTableResult(itemStack, tabOverride);
                 }
                 default -> {
@@ -71,6 +71,6 @@ public class GunSmithTableResultSerializer implements JsonDeserializer<GunSmithT
     }
 
     private ResourceLocation getId(JsonObject jsonObject) {
-        return new ResourceLocation(GsonHelper.getAsString(jsonObject, "id"));
+        return ResourceLocation.parse(GsonHelper.getAsString(jsonObject, "id"));
     }
 }

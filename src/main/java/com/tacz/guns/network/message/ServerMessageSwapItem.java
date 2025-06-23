@@ -1,28 +1,32 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.client.event.SwapItemWithOffHand;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.network.NetworkEvent;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+public class ServerMessageSwapItem implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<ServerMessageSwapItem> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "server_swap_item"));
 
-public class ServerMessageSwapItem {
-    public ServerMessageSwapItem() {
-    }
+    public static final StreamCodec<ByteBuf, ServerMessageSwapItem> STREAM_CODEC =
+            StreamCodec.unit(new ServerMessageSwapItem());
 
-    public static void encode(ServerMessageSwapItem message, FriendlyByteBuf buf) {
-    }
-
-    public static ServerMessageSwapItem decode(FriendlyByteBuf buf) {
-        return new ServerMessageSwapItem();
-    }
-
-    public static void handle(ServerMessageSwapItem message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isClient()) {
-            MinecraftForge.EVENT_BUS.post(new SwapItemWithOffHand());
+    public static void handle(ServerMessageSwapItem message, IPayloadContext context) {
+        if (context.flow().getReceptionSide().isClient()) {
+            context.enqueueWork(() -> {
+                NeoForge.EVENT_BUS.post(new SwapItemWithOffHand());
+            });
         }
-        context.setPacketHandled(true);
     }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
 }

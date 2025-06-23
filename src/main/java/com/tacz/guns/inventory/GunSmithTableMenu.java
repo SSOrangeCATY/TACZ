@@ -18,7 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
@@ -103,22 +102,22 @@ public class GunSmithTableMenu extends AbstractContainerMenu {
                 for (int slotIndex = 0; slotIndex < handler.getSlots(); slotIndex++) {
                     ItemStack stack = handler.getStackInSlot(slotIndex);
                     int stackCount = stack.getCount();
-                    if (!stack.isEmpty() && ingredient.getIngredient().test(stack)) {
+                    if (!stack.isEmpty() && ingredient.ingredient().test(stack)) {
                         count = count + stackCount;
                         // 记录扣除的 slot 和数量
-                        if (count <= ingredient.getCount()) {
+                        if (count <= ingredient.count()) {
                             // 如果数量不足，全扣
                             recordCount.put(slotIndex, stackCount);
                         } else {
                             //  数量够了，只扣需要的数量
-                            int remaining = count - ingredient.getCount();
+                            int remaining = count - ingredient.count();
                             recordCount.put(slotIndex, stackCount - remaining);
                             break;
                         }
                     }
                 }
                 // 数量不够，不执行后续逻辑，合成失败
-                if (count < ingredient.getCount()) {
+                if (count < ingredient.count()) {
                     return;
                 }
             }

@@ -8,6 +8,7 @@ import com.tacz.guns.client.resource.pojo.model.FaceUVsItem;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemDisplayContext;
+import org.jetbrains.annotations.NotNull;
 
 
 public class SlotModel extends EntityModel<Entity> {
@@ -25,11 +26,11 @@ public class SlotModel extends EntityModel<Entity> {
     }
 
     @Override
-    public void setupAnim(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void setupAnim(@NotNull Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
     }
 
     @Override
-    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        bone.render(poseStack, ItemDisplayContext.GUI, buffer, packedLight, packedOverlay);
+    public void renderToBuffer(@NotNull PoseStack poseStack, @NotNull VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int i2) {
+        bone.render(poseStack, ItemDisplayContext.GUI, vertexConsumer, packedLight, packedOverlay);
     }
 }

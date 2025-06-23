@@ -18,10 +18,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.fml.LogicalSide;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -66,11 +66,11 @@ public class LivingEntityShoot {
         if (SyncConfig.SERVER_SHOOT_NETWORK_V.get()) {
             // 根据 tick time 和 允许的网络延迟波动 计算 时间戳的接受窗口
             MinecraftServer server = Objects.requireNonNull(shooter.getServer());
-            double tickTime = Math.max(server.tickTimes[server.getTickCount() % 100] * 1.0E-6D, 50);
+            double tickTime = Math.max(server.getTickTimesNanos()[server.getTickCount() % 100] * 1.0E-6D, 50);
             long alpha = System.currentTimeMillis() - data.baseTimestamp - timestamp;
             if (alpha < -300 || alpha > 300 + tickTime * 2) { // 允许 +- 300ms 的网络波动、窗口下限再扩大 2 个 tick time 时间(最坏情况射击会延迟2个 tick)
                 if (shooter instanceof ServerPlayer player) {
-                    NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ServerMessageSyncBaseTimestamp());
+                    NetworkHandler.sendToClientPlayer(new ServerMessageSyncBaseTimestamp(),player);
                 }
                 return ShootResult.NETWORK_FAIL;
             }
@@ -128,7 +128,7 @@ public class LivingEntityShoot {
             iGun.setBulletInBarrel(currentGunItem, true);
         }
         // 触发射击事件
-        if (MinecraftForge.EVENT_BUS.post(new GunShootEvent(shooter, currentGunItem, LogicalSide.SERVER))) {
+        if (NeoForge.EVENT_BUS.post(new GunShootEvent(shooter, currentGunItem, LogicalSide.SERVER)).isCanceled()) {
             return ShootResult.FORGE_EVENT_CANCEL;
         }
 
@@ -198,8 +198,10 @@ public class LivingEntityShoot {
         if (abstractGunItem.useDummyAmmo(itemStack)) {
             abstractGunItem.findAndExtractDummyAmmo(itemStack, neededAmount);
         } else {
-            shooter.getCapability(ForgeCapabilities.ITEM_HANDLER, null)
-                    .map(cap -> abstractGunItem.findAndExtractInventoryAmmo(cap, itemStack, neededAmount));
+            IItemHandler cap = shooter.getCapability(Capabilities.ItemHandler.ENTITY, null);
+            if (cap != null) {
+                abstractGunItem.findAndExtractInventoryAmmo(cap, itemStack, neededAmount);
+            }
         }
     }
 }

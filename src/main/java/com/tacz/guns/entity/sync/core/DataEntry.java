@@ -2,6 +2,8 @@ package com.tacz.guns.entity.sync.core;
 
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 import org.apache.commons.lang3.Validate;
 
@@ -61,4 +63,10 @@ public class DataEntry<E extends Entity, T> {
     public void readValue(Tag nbt) {
         this.value = this.key.serializer().read(nbt);
     }
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, DataEntry<?, ?>> STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, entry) -> entry.write(buf),
+                    DataEntry::read
+            );
 }

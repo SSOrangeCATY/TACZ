@@ -16,8 +16,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -154,21 +154,21 @@ public class SoundPlayManager {
 
     public static void playMessageSound(ServerMessageSound message) {
         ClientLevel level = Minecraft.getInstance().level;
-        if (level == null || !(level.getEntity(message.getEntityId()) instanceof LivingEntity livingEntity)) {
+        if (level == null || !(level.getEntity(message.entityId()) instanceof LivingEntity livingEntity)) {
             return;
         }
-        ResourceLocation gunId = message.getGunId();
-        ResourceLocation gunDisplayId = message.getGunDisplayId();
+        ResourceLocation gunId = message.gunId();
+        ResourceLocation gunDisplayId = message.gunDisplayId();
         TimelessAPI.getGunDisplay(gunDisplayId, gunId).ifPresent(index -> {
-            String soundName = message.getSoundName();
+            String soundName = message.soundName();
             ResourceLocation soundId = index.getSounds(soundName);
             if (soundId == null) {
                 return;
             }
             if (SoundManager.SHOOT_3P_SOUND.equals(soundName) || SoundManager.SILENCE_3P_SOUND.equals(soundName)) {
-                playClientSound(livingEntity, soundId, message.getVolume(), message.getPitch(), message.getDistance(), true);
+                playClientSound(livingEntity, soundId, message.volume(), message.pitch(), message.distance(), true);
             } else {
-                playClientSound(livingEntity, soundId, message.getVolume(), message.getPitch(), message.getDistance());
+                playClientSound(livingEntity, soundId, message.volume(), message.volume(), message.distance());
             }
         });
     }

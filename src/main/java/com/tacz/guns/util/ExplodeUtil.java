@@ -4,39 +4,77 @@ import com.tacz.guns.config.common.AmmoConfig;
 import com.tacz.guns.util.block.ProjectileExplosion;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
+import net.neoforged.neoforge.event.EventHooks;
 
-public class ExplodeUtil {
-    public static void createExplosion(Entity owner, Entity exploder, float damage, float radius, boolean knockback, boolean destroy, Vec3 hitPos) {
-        // 客户端不执行
+public final class ExplodeUtil {
+    private ExplodeUtil() {} // 工具类私有构造
+
+    public static void createExplosion(Entity owner, Entity exploder, float damage, float radius,
+                                       boolean knockback, boolean destroy, Vec3 hitPos) {
         if (!(exploder.level() instanceof ServerLevel level)) {
-            return;
+            return; // 客户端不执行
         }
-        // 依据配置文件读取方块破坏方式
-        Explosion.BlockInteraction mode = Explosion.BlockInteraction.KEEP;
-        if (destroy) {
-            mode = Explosion.BlockInteraction.DESTROY;
+
+        Explosion.BlockInteraction mode = getExplosionMode(destroy);
+        ProjectileExplosion explosion = createProjectileExplosion(level, owner, exploder, hitPos, damage, radius, knockback, mode);
+
+        if (EventHooks.onExplosionStart(level, explosion)) {
+            return; // 事件取消则不执行
         }
-        // 创建爆炸
-        ProjectileExplosion explosion = new ProjectileExplosion(level, owner, exploder, null, null, hitPos.x(), hitPos.y(), hitPos.z(), damage, radius, knockback, mode);
-        // 监听 forge 事件
-        if (ForgeEventFactory.onExplosionStart(level, explosion)) {
-            return;
-        }
-        // 执行爆炸逻辑
+
+        executeExplosion(explosion, mode);
+        sendExplosionPackets(level, hitPos, radius, explosion);
+    }
+
+    private static Explosion.BlockInteraction getExplosionMode(boolean destroy) {
+        return destroy ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP;
+    }
+
+    private static ProjectileExplosion createProjectileExplosion(ServerLevel level, Entity owner, Entity exploder,
+                                                                 Vec3 hitPos, float damage, float radius,
+                                                                 boolean knockback, Explosion.BlockInteraction mode) {
+        return new ProjectileExplosion(
+                level, owner, exploder, null, null,
+                hitPos.x(), hitPos.y(), hitPos.z(),
+                damage, radius, knockback, mode
+        );
+    }
+
+    private static void executeExplosion(ProjectileExplosion explosion, Explosion.BlockInteraction mode) {
         explosion.explode();
         explosion.finalizeExplosion(true);
         if (mode == Explosion.BlockInteraction.KEEP) {
             explosion.clearToBlow();
         }
-        // 客户端发包，发送爆炸相关信息
-        level.players().stream().filter(player -> Mth.sqrt((float) player.distanceToSqr(hitPos)) < AmmoConfig.EXPLOSIVE_AMMO_VISIBLE_DISTANCE.get()).forEach(player -> {
-            ClientboundExplodePacket packet = new ClientboundExplodePacket(hitPos.x(), hitPos.y(), hitPos.z(), radius, explosion.getToBlow(), explosion.getHitPlayers().get(player));
-            player.connection.send(packet);
-        });
+    }
+
+    private static void sendExplosionPackets(ServerLevel level, Vec3 hitPos, float radius, ProjectileExplosion explosion) {
+        double visibleDistance = AmmoConfig.EXPLOSIVE_AMMO_VISIBLE_DISTANCE.get();
+        float squaredDistance = (float) (visibleDistance * visibleDistance);
+
+        for (ServerPlayer player : level.players()) {
+            if (player.distanceToSqr(hitPos) < squaredDistance) {
+                sendExplosionPacket(player, hitPos, radius, explosion);
+            }
+        }
+    }
+
+    private static void sendExplosionPacket(ServerPlayer player, Vec3 hitPos, float radius, ProjectileExplosion explosion) {
+        Vec3 knockback = explosion.getHitPlayers().get(player);
+        ClientboundExplodePacket packet = new ClientboundExplodePacket(
+                hitPos.x(), hitPos.y(), hitPos.z(),
+                radius,
+                explosion.getToBlow(),
+                knockback,
+                explosion.getBlockInteraction(),
+                explosion.getSmallExplosionParticles(),
+                explosion.getLargeExplosionParticles(),
+                explosion.getExplosionSound()
+        );
+        player.connection.send(packet);
     }
 }

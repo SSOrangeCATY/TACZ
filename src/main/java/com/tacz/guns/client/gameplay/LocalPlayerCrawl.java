@@ -3,6 +3,7 @@ package com.tacz.guns.client.gameplay;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.network.NetworkHandler;
+import com.tacz.guns.network.message.ClientMessagePlayerCrawl;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
@@ -42,7 +43,7 @@ public class LocalPlayerCrawl {
         TimelessAPI.getClientGunIndex(gunId).ifPresent(gunIndex -> {
             this.isCrawling = isCrawl;
             this.crawCooldownTicks = COOLDOWN_TICKS;
-            NetworkHandler.CHANNEL.sendToServer(new ClientMessagePlayerCrawl(isCrawl));
+            NetworkHandler.sendToServer(new ClientMessagePlayerCrawl(isCrawl));
         });
     }
 
@@ -71,7 +72,7 @@ public class LocalPlayerCrawl {
             return;
         }
         // 如果玩家是观察者模型、骑乘、跳跃、在游泳、不在地上，取消
-        if (player.isSpectator() || player.isPassenger() || player.jumping || player.isSwimming() || !player.onGround()) {
+        if (player.isSpectator() || player.isPassenger() || player.input.jumping || player.isSwimming() || !player.onGround()) {
             isCrawling = false;
             this.setCrawlPose();
             return;

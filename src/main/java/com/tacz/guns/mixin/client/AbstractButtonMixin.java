@@ -11,8 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class AbstractButtonMixin {
     /**
      * 记录点击按钮的时间，后续方便给予射击冷却，防止点击按钮后误触开火
-     */
-    @Inject(method = "onClick(DD)V", at = @At("HEAD"))
+     */@Inject(method = "onClick(DD)V", at = @At("HEAD"))
     public void onClickHead(double mouseX, double mouseY, CallbackInfo ci) {
         LocalPlayerDataHolder.clientClickButtonTimestamp = System.currentTimeMillis();
     }

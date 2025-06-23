@@ -9,8 +9,9 @@ import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.item.gun.GunItemManager;
 import com.tacz.guns.init.ModItems;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.EnumMap;
 
@@ -96,7 +97,7 @@ public final class GunItemBuilder {
             return ItemStack.EMPTY;
         }
 
-        RegistryObject<? extends AbstractGunItem> gunItemRegistryObject = GunItemManager.getGunItemRegistryObject(itemType);
+        DeferredHolder<Item, ? extends AbstractGunItem> gunItemRegistryObject = GunItemManager.getGunItemRegistryObject(itemType);
         if (gunItemRegistryObject == null) {
             return ItemStack.EMPTY;
         }

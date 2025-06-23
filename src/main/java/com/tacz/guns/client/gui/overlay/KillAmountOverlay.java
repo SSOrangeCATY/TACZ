@@ -5,20 +5,21 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.config.client.RenderConfig;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import org.jetbrains.annotations.NotNull;
 
-public class KillAmountOverlay implements IGuiOverlay {
+public class KillAmountOverlay implements LayeredDraw.Layer {
     private static long killTimestamp = -1L;
     private static int killAmount = 0;
 
     @Override
-    public void render(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+    public void render(@NotNull GuiGraphics graphics, @NotNull DeltaTracker var2) {
         if (!RenderConfig.KILL_AMOUNT_ENABLE.get()) {
             return;
         }
@@ -38,6 +39,8 @@ public class KillAmountOverlay implements IGuiOverlay {
         if (!(stack.getItem() instanceof IGun)) {
             return;
         }
+        int width = mc.screen.width;
+        int height = mc.screen.height;
 
         String text;
         if (killAmount < 10) {

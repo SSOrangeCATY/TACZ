@@ -1,11 +1,10 @@
 package com.tacz.guns.compat.oculus;
 
-import com.tacz.guns.compat.oculus.legacy.OculusCompatLegacy;
 import com.tacz.guns.compat.oculus.newly.OculusCompatNewly;
 import com.tacz.guns.init.CompatRegistry;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.util.function.Function;
@@ -21,9 +20,6 @@ public final class OculusCompat {
             if (mod.getModInfo().getVersion().compareTo(VERSION) >= 0) {
                 END_BATCH_FUNCTION = OculusCompatNewly::endBatch;
                 IS_RENDER_SHADOW_SUPPER = OculusCompatNewly::isRenderShadow;
-            } else {
-                END_BATCH_FUNCTION = OculusCompatLegacy::endBatch;
-                IS_RENDER_SHADOW_SUPPER = OculusCompatLegacy::isRenderShadow;
             }
         });
     }

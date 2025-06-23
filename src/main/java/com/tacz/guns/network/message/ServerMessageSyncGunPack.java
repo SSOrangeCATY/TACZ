@@ -1,55 +1,47 @@
 package com.tacz.guns.network.message;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.client.resource.ClientIndexManager;
 import com.tacz.guns.resource.network.CommonNetworkCache;
 import com.tacz.guns.resource.network.DataType;
-import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
+public record ServerMessageSyncGunPack(
+        Map<DataType, Map<ResourceLocation, String>> cache
+) implements CustomPacketPayload {
+    public static final Type<ServerMessageSyncGunPack> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "server_sync_gun_pack"));
 
-public class ServerMessageSyncGunPack {
-    private final Map<DataType, Map<ResourceLocation, String>> cache;
+    public static final StreamCodec<ByteBuf, ServerMessageSyncGunPack> STREAM_CODEC =
+            ByteBufCodecs.map(
+                    (i)-> ((Map<DataType, Map<ResourceLocation, String>>) new HashMap<DataType, Map<ResourceLocation, String>>()),
+                    DataType.STREAM_CODEC,
+                    ByteBufCodecs.map(
+                            HashMap::new,
+                            ResourceLocation.STREAM_CODEC,
+                            ByteBufCodecs.STRING_UTF8
+                    )
+            ).map(ServerMessageSyncGunPack::new, ServerMessageSyncGunPack::cache);
 
-    public ServerMessageSyncGunPack(Map<DataType, Map<ResourceLocation, String>> cache) {
-        this.cache = cache;
-    }
-
-    public static void encode(ServerMessageSyncGunPack message, FriendlyByteBuf buf) {
-        buf.writeMap(message.getCache(), FriendlyByteBuf::writeEnum, (buf1, map) -> {
-            buf1.writeMap(map, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeUtf);
-        });
-    }
-
-    public static ServerMessageSyncGunPack decode(FriendlyByteBuf buf) {
-        var map = buf.readMap(buf1 -> buf1.readEnum(DataType.class), buf2 -> {
-            return buf2.readMap(FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readUtf);
-        });
-        return new ServerMessageSyncGunPack(map);
-    }
-
-    public static void handle(ServerMessageSyncGunPack message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isClient()) {
-            context.enqueueWork(() -> doSync(message));
+    public static void handle(ServerMessageSyncGunPack message, IPayloadContext context) {
+        if (context.flow().getReceptionSide().isClient()) {
+            context.enqueueWork(() -> {
+                CommonNetworkCache.INSTANCE.fromNetwork(message.cache());
+                ClientIndexManager.reload();
+            });
         }
-        context.setPacketHandled(true);
     }
 
-
-    public Map<DataType, Map<ResourceLocation, String>> getCache() {
-        return cache;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private static void doSync(ServerMessageSyncGunPack message) {
-        CommonNetworkCache.INSTANCE.fromNetwork(message.cache);
-        // 通知客户端重新构建ClientIndex
-        ClientIndexManager.reload();
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

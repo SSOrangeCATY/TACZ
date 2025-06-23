@@ -3,6 +3,8 @@ package com.tacz.guns.resource.filter;
 import com.google.gson.*;
 import com.tacz.guns.GunMod;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -47,11 +49,11 @@ public class RecipeFilter {
         return output;
     }
 
-    public <T> List<T> filter(List<T> input, Function<T, ResourceLocation> getter) {
+    public <T extends Recipe<?>> List<T> filter(List<RecipeHolder<T>> input, Function<T, ResourceLocation> getter) {
         List<T> output = new ArrayList<>();
-        for (T entry : input) {
-            if (contains(getter.apply(entry))) {
-                output.add(entry);
+        for (RecipeHolder<T> entry : input) {
+            if (contains(getter.apply(entry.value()))) {
+                output.add(entry.value());
             }
         }
         return output;

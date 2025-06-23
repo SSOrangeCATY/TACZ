@@ -10,25 +10,25 @@ import com.tacz.guns.client.resource.index.ClientGunIndex;
 import com.tacz.guns.config.client.RenderConfig;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.GunHeatData;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 import java.text.DecimalFormat;
 
-public class HeatBarOverlay implements IGuiOverlay {
-    private static final ResourceLocation HEATBASE = new ResourceLocation(GunMod.MOD_ID, "textures/hud/heat_base.png");
+public class HeatBarOverlay implements LayeredDraw.Layer {
+    private static final ResourceLocation HEATBASE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/hud/heat_base.png");
     private static final DecimalFormat HEAT_FORMAT_PERCENT = new DecimalFormat("0.0%");
     private static float heatScale = 0.25f;
 
     @Override
-    public void render(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+    public void render(GuiGraphics graphics, DeltaTracker var2) {
         if (!RenderConfig.GUN_HUD_ENABLE.get()) {
             return;
         }
@@ -48,6 +48,9 @@ public class HeatBarOverlay implements IGuiOverlay {
             return;
         }
 
+        int width = mc.screen.width;
+        int height = mc.screen.height;
+
         PoseStack poseStack = graphics.pose();
         if(gunData.getHeatData() != null && iGun.hasHeatData(stack)) {
             poseStack.pushPose();
@@ -62,14 +65,13 @@ public class HeatBarOverlay implements IGuiOverlay {
             poseStack.scale(heatScale, heatScale, 1);
 
             boolean locked = iGun.isOverheatLocked(stack);
-            int tickCount = gui.getGuiTicks();
-            renderOverheat(percent, graphics, (int) (width / heatScale), (int) (height / heatScale), locked, tickCount);
+            renderOverheat(percent, graphics, (int) (width / heatScale), (int) (height / heatScale), locked, var2.getGameTimeDeltaTicks());
             poseStack.popPose();
         }
     }
 
     public void renderOverheat(float heatPercentage, GuiGraphics pGraphics, int w, int h,
-                               boolean locked, int tickCount) {
+                               boolean locked, float tickCount) {
         int barColor = getHeatColor(heatPercentage, locked, tickCount);
         pGraphics.fill(w / 2 - 30, h / 2 + 30, w / 2 - 30 + (int) (heatPercentage * 60), h / 2 + 34, barColor);
         if (locked) {
@@ -89,7 +91,7 @@ public class HeatBarOverlay implements IGuiOverlay {
         pGraphics.drawString(font, percentString, w / 2 - (font.width(percentString) / 2), h / 2 + 38, color, true);
     }
 
-    public static int getHeatColor(float percent, boolean locked, int tickCount) {
+    public static int getHeatColor(float percent, boolean locked, float tickCount) {
         if (locked) {
             return tickCount % 20 < 10 ? 0x9FFF0000 : 0x9FFFFF00;
         }

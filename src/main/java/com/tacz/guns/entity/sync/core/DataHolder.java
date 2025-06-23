@@ -1,5 +1,10 @@
 package com.tacz.guns.entity.sync.core;
 
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
 import javax.annotation.Nullable;
@@ -45,5 +50,40 @@ public class DataHolder {
 
     public List<DataEntry<?, ?>> gatherAll() {
         return this.dataMap.values().stream().filter(entry -> entry.getKey().syncMode() != SyncedDataKey.SyncMode.NONE).collect(Collectors.toList());
+    }
+
+    public ListTag serialize(HolderLookup.Provider provider) {
+        ListTag list = new ListTag();
+        this.dataMap.forEach((key, entry) -> {
+            if (key.save()) {
+                CompoundTag keyTag = new CompoundTag();
+                keyTag.putString("ClassKey", key.classKey().id().toString());
+                keyTag.putString("DataKey", key.id().toString());
+                keyTag.put("Value", entry.writeValue());
+                list.add(keyTag);
+            }
+        });
+        return list;
+    }
+
+    public void deserialize(ListTag listTag,HolderLookup.Provider provider) {
+        this.dataMap.clear();
+        listTag.forEach(entryTag -> {
+            CompoundTag keyTag = (CompoundTag) entryTag;
+            ResourceLocation classKey = ResourceLocation.tryParse(keyTag.getString("ClassKey"));
+            ResourceLocation dataKey = ResourceLocation.tryParse(keyTag.getString("DataKey"));
+            Tag value = keyTag.get("Value");
+            SyncedClassKey<?> syncedClassKey = SyncedEntityData.instance().getClassKey(classKey);
+            if (syncedClassKey == null) {
+                return;
+            }
+            SyncedDataKey<?, ?> syncedDataKey = SyncedEntityData.instance().getKey(syncedClassKey, dataKey);
+            if (syncedDataKey == null || !syncedDataKey.save()) {
+                return;
+            }
+            DataEntry<?, ?> entry = new DataEntry<>(syncedDataKey);
+            entry.readValue(value);
+            this.dataMap.put(syncedDataKey, entry);
+        });
     }
 }

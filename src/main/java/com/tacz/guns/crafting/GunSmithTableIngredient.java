@@ -1,21 +1,25 @@
 package com.tacz.guns.crafting;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 
-public class GunSmithTableIngredient {
-    private final Ingredient ingredient;
-    private final int count;
+public record GunSmithTableIngredient(Ingredient ingredient, int count) {
+    public static final Codec<GunSmithTableIngredient> CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Ingredient.CODEC.fieldOf("ingredient").forGetter(GunSmithTableIngredient::ingredient),
+                    Codec.INT.fieldOf("count").forGetter(GunSmithTableIngredient::count)
+            ).apply(instance, GunSmithTableIngredient::new)
+    );
 
-    public GunSmithTableIngredient(Ingredient ingredient, int count) {
-        this.ingredient = ingredient;
-        this.count = count;
-    }
-
-    public Ingredient getIngredient() {
-        return ingredient;
-    }
-
-    public int getCount() {
-        return count;
-    }
+    public static final StreamCodec<RegistryFriendlyByteBuf,GunSmithTableIngredient> STREAM_CODEC = StreamCodec.composite(
+            Ingredient.CONTENTS_STREAM_CODEC,
+            GunSmithTableIngredient::ingredient,
+            ByteBufCodecs.VAR_INT,
+            GunSmithTableIngredient::count,
+            GunSmithTableIngredient::new
+    );
 }

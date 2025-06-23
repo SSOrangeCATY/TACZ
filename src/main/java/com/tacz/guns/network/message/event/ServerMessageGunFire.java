@@ -1,56 +1,59 @@
 package com.tacz.guns.network.message.event;
 
+import com.tacz.guns.GunMod;
 import com.tacz.guns.api.event.common.GunFireEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.fml.LogicalSide;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+public record ServerMessageGunFire(
+        int shooterId,
+        ItemStack gunItemStack
+) implements CustomPacketPayload {
 
-public class ServerMessageGunFire {
-    private final int shooterId;
-    private final ItemStack gunItemStack;
+    public static final Type<ServerMessageGunFire> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "server_player_fire"));
 
-    public ServerMessageGunFire(int shooterId, ItemStack gunItemStack) {
-        this.shooterId = shooterId;
-        this.gunItemStack = gunItemStack;
-    }
+    public static final StreamCodec<RegistryFriendlyByteBuf, ServerMessageGunFire> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.VAR_INT,
+                    ServerMessageGunFire::shooterId,
+                    ItemStack.STREAM_CODEC,
+                    ServerMessageGunFire::gunItemStack,
+                    ServerMessageGunFire::new
+            );
 
-    public static void encode(ServerMessageGunFire message, FriendlyByteBuf buf) {
-        buf.writeVarInt(message.shooterId);
-        buf.writeItem(message.gunItemStack);
-    }
+    public static void handle(ServerMessageGunFire message, IPayloadContext context) {
+        if (context.flow().getReceptionSide().isClient()) {
+            context.enqueueWork(() -> {
+                ClientLevel level = Minecraft.getInstance().level;
+                if (level == null) return;
 
-    public static ServerMessageGunFire decode(FriendlyByteBuf buf) {
-        int shooterId = buf.readVarInt();
-        ItemStack gunItemStack = buf.readItem();
-        return new ServerMessageGunFire(shooterId, gunItemStack);
-    }
-
-    public static void handle(ServerMessageGunFire message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        if (context.getDirection().getReceptionSide().isClient()) {
-            context.enqueueWork(() -> doClientEvent(message));
+                if (level.getEntity(message.shooterId()) instanceof LivingEntity shooter) {
+                    GunFireEvent event = new GunFireEvent(
+                            shooter,
+                            message.gunItemStack(),
+                            context.flow().getReceptionSide().isClient()
+                                    ? LogicalSide.CLIENT
+                                    : LogicalSide.SERVER
+                    );
+                    NeoForge.EVENT_BUS.post(event);
+                }
+            });
         }
-        context.setPacketHandled(true);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private static void doClientEvent(ServerMessageGunFire message) {
-        ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) {
-            return;
-        }
-        if (level.getEntity(message.shooterId) instanceof LivingEntity shooter) {
-            GunFireEvent gunFireEvent = new GunFireEvent(shooter, message.gunItemStack, LogicalSide.CLIENT);
-            MinecraftForge.EVENT_BUS.post(gunFireEvent);
-        }
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

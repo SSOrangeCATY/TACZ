@@ -15,6 +15,7 @@ import com.tacz.guns.client.model.BedrockGunModel;
 import com.tacz.guns.client.model.functional.ShellRender;
 import com.tacz.guns.client.resource.GunDisplayInstance;
 import com.tacz.guns.client.resource.index.ClientGunIndex;
+import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.pojo.data.gun.Bolt;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.util.AttachmentDataUtils;
@@ -24,7 +25,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.joml.Vector3f;
 import org.luaj.vm2.LuaTable;
 
@@ -172,23 +174,22 @@ public class GunAnimationStateContext extends ItemAnimationStateContext {
         if (iGun.useDummyAmmo(currentGunItem)) {
             return iGun.getDummyAmmoAmount(currentGunItem) > 0;
         }
-        return processCameraEntity(entity ->
-                    entity.getCapability(ForgeCapabilities.ITEM_HANDLER, null)
-                        .map(cap -> {
-                            // 背包检查
-                            for (int i = 0; i < cap.getSlots(); i++) {
-                                ItemStack checkAmmoStack = cap.getStackInSlot(i);
-                                if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(currentGunItem, checkAmmoStack)) {
-                                    return true;
-                                }
-                                if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(currentGunItem, checkAmmoStack)) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        })
-                        .orElse(false)
-                ).orElse(false);
+        return processCameraEntity(entity -> {
+            IItemHandler cap = entity.getCapability(Capabilities.ItemHandler.ENTITY, null);
+            if (cap != null) {
+                for (int i = 0; i < cap.getSlots(); i++) {
+                    ItemStack checkAmmoStack = cap.getStackInSlot(i);
+                    if (checkAmmoStack.getItem() instanceof IAmmo iAmmo && iAmmo.isAmmoOfGun(currentGunItem, checkAmmoStack)) {
+                        return true;
+                    }
+                    if (checkAmmoStack.getItem() instanceof IAmmoBox iAmmoBox && iAmmoBox.isAmmoBoxOfGun(currentGunItem, checkAmmoStack)) {
+                        return true;
+                    }
+                }
+                return false;
+            }else{
+                return false;
+            }}).orElse(false);
     }
 
     /**
@@ -412,8 +413,8 @@ public class GunAnimationStateContext extends ItemAnimationStateContext {
             gunData = TimelessAPI.getClientGunIndex(iGun.getGunId(currentGunItem))
                     .map(ClientGunIndex::getGunData).orElse(null);
         }
-        if (currentGunItem.hasTag()) {
-            nbtUtil = new LuaNbtAccessor(currentGunItem.getTag());
+        if (currentGunItem.has(ModDataComponentTypes.DATA)) {
+            nbtUtil = LuaNbtAccessor.from(currentGunItem);
         }
     }
 }

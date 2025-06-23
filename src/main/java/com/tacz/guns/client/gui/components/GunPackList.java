@@ -16,9 +16,11 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -29,11 +31,9 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
     private final Checkbox byHandCheckbox;
     private final EditBox byName;
 
-    public GunPackList(Minecraft pMinecraft, int pWidth, int pHeight, int pY0, int pY1, int pItemHeight,
+    public GunPackList(Minecraft pMinecraft, int pWidth, int pHeight, int pY0, int pItemHeight,
                        Map<ResourceLocation, List<ResourceLocation>> recipes, GunSmithTableScreen parent) {
-        super(pMinecraft, pWidth, pHeight, pY0, pY1, pItemHeight);
-        this.setRenderBackground(false);
-        this.setRenderTopAndBottom(false);
+        super(pMinecraft, pWidth, pHeight, pY0, pItemHeight);
         this.parent = parent;
         Set<String> namespaces = new HashSet<>();
         for (List<ResourceLocation> entry : recipes.values()) {
@@ -110,27 +110,26 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
     }
 
     protected int getScrollbarPosition() {
-        return this.x1 - 2;
+        return this.getWidth() - 2;
     }
-
     @Override
-    public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(pGuiGraphics);
-        pGuiGraphics.fill(this.x0, this.y0, this.x1, this.y1, 0x80000000);
+    public void renderWidget(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.renderListBackground(pGuiGraphics);
+        pGuiGraphics.fill(this.getX(), this.getY(), this.getWidth(), this.getHeight(), 0x80000000);
         int i = this.getScrollbarPosition();
         int j = i + 6;
 
         this.enableScissor(pGuiGraphics);
-        this.renderList(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+        this.renderListItems(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         pGuiGraphics.disableScissor();
 
         int i2 = this.getMaxScroll();
         if (i2 > 0) {
-            int j2 = (int)((float)((this.y1 - this.y0) * (this.y1 - this.y0)) / (float)this.getMaxPosition());
-            j2 = Mth.clamp(j2, 32, this.y1 - this.y0 - 8);
-            int k1 = (int)this.getScrollAmount() * (this.y1 - this.y0 - j2) / i2 + this.y0;
-            if (k1 < this.y0) {
-                k1 = this.y0;
+            int j2 = (int)((float)((this.getHeight() - this.getY()) * (this.getHeight() - this.getY())) / (float)this.getMaxPosition());
+            j2 = Mth.clamp(j2, 32, this.getHeight() - this.getY() - 8);
+            int k1 = (int)this.getScrollAmount() * (this.getHeight() - this.getY() - j2) / i2 + this.getY();
+            if (k1 < this.getY()) {
+                k1 = this.getY();
             }
             pGuiGraphics.fill(i, k1, j, k1 + j2, -8355712);
             pGuiGraphics.fill(i, k1, j - 1, k1 + j2 - 1, -4144960);
@@ -141,7 +140,7 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
     }
 
     public int getRowLeft() {
-        return this.x0 + 4;
+        return this.getX() + 4;
     }
 
     public int getRowWidth() {
@@ -161,20 +160,20 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
         }
 
         @Override
-        public void render(GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean pHovering, float pPartialTick) {
+        public void render(@NotNull GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean pHovering, float pPartialTick) {
             this.widget.setX(pLeft);
             this.widget.setY(pTop);
             this.widget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         }
 
         @Override
-        public List<? extends GuiEventListener> children() {
+        public @NotNull List<? extends GuiEventListener> children() {
             return ImmutableList.of(widget);
         }
     }
 
     public static class Checkbox extends AbstractButton {
-        private static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/checkbox.png");
+        private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/gui/checkbox.png");
         protected boolean selected;
         protected final boolean showLabel;
         private String id;
@@ -231,5 +230,13 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
             }
 
         }
+    }
+
+    @Override
+    protected void renderListBackground(@NotNull GuiGraphics guiGraphics) {
+    }
+
+    @Override
+    protected void renderListSeparators(@NotNull GuiGraphics guiGraphics) {
     }
 }

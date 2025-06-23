@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonParseException;
 import com.tacz.guns.GunMod;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
-import dev.kosmx.playerAnim.core.data.gson.AnimationSerializing;
+import dev.kosmx.playerAnim.core.data.gson.AnimationJson;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +15,9 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class PlayerAnimatorAssetManager extends SimplePreparableReloadListener<Map<ResourceLocation, HashMap<String, KeyframeAnimation>>> {
@@ -32,7 +34,8 @@ public class PlayerAnimatorAssetManager extends SimplePreparableReloadListener<M
     }
 
     void putAnimation(ResourceLocation id, InputStream stream) throws IOException {
-        List<KeyframeAnimation> keyframeAnimations = AnimationSerializing.deserializeAnimation(stream);
+
+        List<KeyframeAnimation> keyframeAnimations = AnimationJson.GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), AnimationJson.getListedTypeToken());
         for (var animation : keyframeAnimations) {
             if (animation.extraData.get("name") instanceof String text) {
                 String name = PlayerAnimationRegistry.serializeTextToString(text).toLowerCase(Locale.ENGLISH);
@@ -65,7 +68,7 @@ public class PlayerAnimatorAssetManager extends SimplePreparableReloadListener<M
             ResourceLocation resourcelocation1 = filetoidconverter.fileToId(resourcelocation);
 
             try (Reader reader = entry.getValue().openAsReader()) {
-                List<KeyframeAnimation> keyframeAnimations = AnimationSerializing.deserializeAnimation(reader);
+                List<KeyframeAnimation> keyframeAnimations = AnimationJson.GSON.fromJson(reader, AnimationJson.getListedTypeToken());
                 for (var animation : keyframeAnimations) {
                     if (animation.extraData.get("name") instanceof String text) {
                         String name = PlayerAnimationRegistry.serializeTextToString(text).toLowerCase(Locale.ENGLISH);

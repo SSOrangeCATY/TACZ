@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public record ClientMessageLaserColor(Map<AttachmentType, Integer> colorMap, boolean applyGunColor, int gunColor, int gunSlotIndex) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<ClientMessageCraft> TYPE =
+    public static final CustomPacketPayload.Type<ClientMessageLaserColor> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_laser_color"));
 
     public static final StreamCodec<ByteBuf, ClientMessageLaserColor> STREAM_CODEC = StreamCodec.composite(

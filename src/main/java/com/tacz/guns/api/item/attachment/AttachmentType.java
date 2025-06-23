@@ -1,6 +1,7 @@
 package com.tacz.guns.api.item.attachment;
 
 import com.google.gson.annotations.SerializedName;
+import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.VarInt;
 import net.minecraft.network.codec.StreamCodec;
@@ -52,4 +53,8 @@ public enum AttachmentType {
         }
     };
 
+    public static final Codec<AttachmentType> CODEC = Codec.STRING.xmap(
+            AttachmentType::valueOf,
+            AttachmentType::name
+    );
 }
