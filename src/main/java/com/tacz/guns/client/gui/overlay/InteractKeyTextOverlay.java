@@ -39,8 +39,8 @@ public class InteractKeyTextOverlay implements LayeredDraw.Layer {
         if (hitResult == null) {
             return;
         }
-        int width = mc.screen.width;
-        int height = mc.screen.height;
+        int width = mc.getWindow().getScreenWidth();
+        int height = mc.getWindow().getScreenHeight();
 
         if (hitResult instanceof BlockHitResult blockHitResult) {
             renderBlockText(graphics, width, height, blockHitResult, player, mc);

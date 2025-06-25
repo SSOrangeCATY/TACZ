@@ -1,7 +1,7 @@
 package com.tacz.guns.api.entity;
 
 import com.tacz.guns.entity.shooter.ShooterDataHolder;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
@@ -159,7 +159,7 @@ public interface IGunOperator {
      *
      * @param cacheProperty 更新完的配件属性修改值
      */
-    void updateCacheProperty(AttachmentCacheProperty cacheProperty);
+    void updateCacheProperty(AccessoryCacheProperty cacheProperty);
 
     /**
      * 获取配件属性修改值缓存
@@ -167,7 +167,7 @@ public interface IGunOperator {
      * @return 绝大部分情况下，这个数值都不可能为 null
      */
     @Nullable
-    AttachmentCacheProperty getCacheProperty();
+    AccessoryCacheProperty getCacheProperty();
 
     ShooterDataHolder getDataHolder();
 

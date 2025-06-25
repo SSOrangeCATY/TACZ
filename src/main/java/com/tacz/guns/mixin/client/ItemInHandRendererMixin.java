@@ -19,11 +19,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin implements KeepingItemRenderer {
-    @Shadow
+    @Shadow(remap = false)
     private float mainHandHeight;
-    @Shadow
+    @Shadow(remap = false)
     private float oMainHandHeight;
-    @Shadow
+    @Shadow(remap = false)
     private ItemStack mainHandItem;
     @Unique
     private ItemStack tacz$KeepItem;
@@ -32,12 +32,12 @@ public class ItemInHandRendererMixin implements KeepingItemRenderer {
     @Unique
     private long tacz$KeepTimestamp;
 
-    @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
+    @Inject(method = "renderHandsWithItems", at = @At("HEAD"),remap = false)
     public void beforeHandRender(float pPartialTicks, PoseStack pMatrixStack, MultiBufferSource.BufferSource pBuffer, LocalPlayer pPlayerEntity, int pCombinedLight, CallbackInfo ci) {
         NeoForge.EVENT_BUS.post(new BeforeRenderHandEvent(pMatrixStack));
     }
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "tick", at = @At("HEAD"),remap = false)
     public void cancelEquippedProgress(CallbackInfo ci) {
         if (Minecraft.getInstance().player == null) {
             return;

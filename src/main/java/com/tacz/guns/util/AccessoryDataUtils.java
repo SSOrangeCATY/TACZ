@@ -3,16 +3,16 @@ package com.tacz.guns.util;
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.config.sync.SyncConfig;
 import com.tacz.guns.resource.index.CommonAttachmentIndex;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import com.tacz.guns.resource.modifier.custom.*;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.BulletData;
 import com.tacz.guns.resource.pojo.data.gun.ExtraDamage;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
@@ -26,27 +26,27 @@ import java.util.function.Consumer;
 /**
  * 配件数据工具类，用于离线计算物品属性<br>
  * 不应该频繁调用，应尽可能调用实体缓存<br>
- * 参见 {@link AttachmentCacheProperty}
+ * 参见 {@link AccessoryCacheProperty}
  */
-public final class AttachmentDataUtils {
-    public static void getAllAttachmentData(ItemStack gunItem, GunData gunData, Consumer<AttachmentData> dataConsumer) {
+public final class AccessoryDataUtils {
+    public static void getAllAttachmentData(ItemStack gunItem, GunData gunData, Consumer<AccessoryData> dataConsumer) {
         IGun iGun = IGun.getIGunOrNull(gunItem);
         if (iGun == null) {
             return;
         }
-        for (AttachmentType type : AttachmentType.values()) {
-            if (type == AttachmentType.NONE) {
+        for (AccessoryType type : AccessoryType.values()) {
+            if (type == AccessoryType.NONE) {
                 continue;
             }
-            ResourceLocation attachmentId = iGun.getAttachmentId(gunItem, type);
-            if (DefaultAssets.isEmptyAttachmentId(attachmentId)) {
+            ResourceLocation accessoryId = iGun.getAccessoryId(gunItem, type);
+            if (DefaultAssets.isEmptyAttachmentId(accessoryId)) {
                 continue;
             }
-            AttachmentData attachmentData = gunData.getExclusiveAttachments().get(attachmentId);
-            if (attachmentData != null) {
-                dataConsumer.accept(attachmentData);
+            AccessoryData accessoryData = gunData.getExclusiveAccessories().get(accessoryId);
+            if (accessoryData != null) {
+                dataConsumer.accept(accessoryData);
             } else {
-                TimelessAPI.getCommonAttachmentIndex(attachmentId).ifPresent(index -> dataConsumer.accept(index.getData()));
+                TimelessAPI.getCommonAttachmentIndex(accessoryId).ifPresent(index -> dataConsumer.accept(index.getData()));
             }
         }
     }
@@ -56,18 +56,18 @@ public final class AttachmentDataUtils {
         if (iGun == null) {
             return 0;
         }
-        ResourceLocation attachmentId = iGun.getAttachmentId(gunItem, AttachmentType.EXTENDED_MAG);
-        if (DefaultAssets.isEmptyAttachmentId(attachmentId)) {
+        ResourceLocation accessoryId = iGun.getAccessoryId(gunItem, AccessoryType.EXTENDED_MAG);
+        if (DefaultAssets.isEmptyAttachmentId(accessoryId)) {
             return 0;
         }
-        AttachmentData attachmentData = gunData.getExclusiveAttachments().get(attachmentId);
-        if (attachmentData != null) {
-            int level = attachmentData.getExtendedMagLevel();
+        AccessoryData accessoryData = gunData.getExclusiveAccessories().get(accessoryId);
+        if (accessoryData != null) {
+            int level = accessoryData.getExtendedMagLevel();
             if (level <= 0) {
                 return 0;
             } else return Math.min(level, 3);
         } else {
-            return TimelessAPI.getCommonAttachmentIndex(attachmentId).map(index -> {
+            return TimelessAPI.getCommonAttachmentIndex(accessoryId).map(index -> {
                 int level = index.getData().getExtendedMagLevel();
                 if (level <= 0) {
                     return 0;
@@ -95,16 +95,16 @@ public final class AttachmentDataUtils {
         }
 
         List<Modifier> modifiers = new ArrayList<>();
-        for (AttachmentType type : AttachmentType.values()){
-            ResourceLocation id = iGun.getAttachmentId(gunItem, type);
-            AttachmentData attachmentData = gunData.getExclusiveAttachments().get(id);
-            if (attachmentData != null) {
-                var m = attachmentData.getModifier().get(WeightModifier.ID);
+        for (AccessoryType type : AccessoryType.values()){
+            ResourceLocation id = iGun.getAccessoryId(gunItem, type);
+            AccessoryData accessoryData = gunData.getExclusiveAccessories().get(id);
+            if (accessoryData != null) {
+                var m = accessoryData.getModifier().get(WeightModifier.ID);
                 if(m != null && m.getValue() instanceof Modifier modifier) {
                     modifiers.add(modifier);
                 } else {
                     Modifier modifier = new Modifier();
-                    modifier.setAddend(attachmentData.getWeight());
+                    modifier.setAddend(accessoryData.getWeight());
                     modifiers.add(modifier);
                 }
             } else {
@@ -120,7 +120,7 @@ public final class AttachmentDataUtils {
                 });
             }
         }
-        return AttachmentPropertyManager.eval(modifiers, gunData.getWeight());
+        return AccessoryPropertyManager.eval(modifiers, gunData.getWeight());
     }
 
     public static boolean isExplodeEnabled(ItemStack gunItem, GunData gunData) {
@@ -153,7 +153,7 @@ public final class AttachmentDataUtils {
         finalBase *= SyncConfig.ARMOR_IGNORE_BASE_MULTIPLIER.get();
 
         List<Modifier> modifiers = getModifiers(gunItem, gunData, ArmorIgnoreModifier.ID);
-        return AttachmentPropertyManager.eval(modifiers, finalBase);
+        return AccessoryPropertyManager.eval(modifiers, finalBase);
     }
 
     public static double getHeadshotMultiplier(ItemStack gunItem, GunData gunData) {
@@ -173,7 +173,7 @@ public final class AttachmentDataUtils {
         finalBase *= SyncConfig.HEAD_SHOT_BASE_MULTIPLIER.get();
 
         List<Modifier> modifiers = getModifiers(gunItem, gunData, HeadShotModifier.ID);
-        return AttachmentPropertyManager.eval(modifiers, finalBase);
+        return AccessoryPropertyManager.eval(modifiers, finalBase);
     }
 
     public static double getDamageWithAttachment(ItemStack gunItem, GunData gunData) {
@@ -198,7 +198,7 @@ public final class AttachmentDataUtils {
         finalBase *= SyncConfig.DAMAGE_BASE_MULTIPLIER.get();
 
         List<Modifier> modifiers = getModifiers(gunItem, gunData, DamageModifier.ID);
-        return AttachmentPropertyManager.eval(modifiers, finalBase);
+        return AccessoryPropertyManager.eval(modifiers, finalBase);
     }
 
     /**
@@ -214,19 +214,19 @@ public final class AttachmentDataUtils {
             return new ArrayList<>();
         }
         List<Modifier> modifiers = new ArrayList<>();
-        for (AttachmentType type : AttachmentType.values()) {
-            ResourceLocation attachmentId = iGun.getAttachmentId(gunItem, type);
-            if (DefaultAssets.isEmptyAttachmentId(attachmentId)) {
+        for (AccessoryType type : AccessoryType.values()) {
+            ResourceLocation accessoryId = iGun.getAccessoryId(gunItem, type);
+            if (DefaultAssets.isEmptyAttachmentId(accessoryId)) {
                 continue;
             }
-            AttachmentData attachmentData = gunData.getExclusiveAttachments().get(attachmentId);
-            if (attachmentData != null) {
-                var m = attachmentData.getModifier().get(id);
+            AccessoryData accessoryData = gunData.getExclusiveAccessories().get(accessoryId);
+            if (accessoryData != null) {
+                var m = accessoryData.getModifier().get(id);
                 if(m != null && m.getValue() instanceof Modifier modifier) {
                     modifiers.add(modifier);
                 }
             } else {
-                CommonAttachmentIndex index = TimelessAPI.getCommonAttachmentIndex(attachmentId).orElse(null);
+                CommonAttachmentIndex index = TimelessAPI.getCommonAttachmentIndex(accessoryId).orElse(null);
                 if (index != null) {
                     var m = index.getData().getModifier().get(id);
                     if(m != null && m.getValue() instanceof Modifier modifier) {
@@ -253,20 +253,20 @@ public final class AttachmentDataUtils {
         if (iGun == null) {
             return false;
         }
-        for (AttachmentType type : AttachmentType.values()) {
-            ResourceLocation attachmentId = iGun.getAttachmentId(gunItem, type);
-            if (DefaultAssets.isEmptyAttachmentId(attachmentId)) {
+        for (AccessoryType type : AccessoryType.values()) {
+            ResourceLocation accessoryId = iGun.getAccessoryId(gunItem, type);
+            if (DefaultAssets.isEmptyAttachmentId(accessoryId)) {
                 continue;
             }
-            AttachmentData attachmentData = gunData.getExclusiveAttachments().get(attachmentId);
-            if (attachmentData != null) {
-                var m = attachmentData.getModifier().get(id);
+            AccessoryData accessoryData = gunData.getExclusiveAccessories().get(accessoryId);
+            if (accessoryData != null) {
+                var m = accessoryData.getModifier().get(id);
                 boolean value = resolve(m, resolver, clazz);
                 if (value) {
                     return true;
                 }
             } else {
-                CommonAttachmentIndex index = TimelessAPI.getCommonAttachmentIndex(attachmentId).orElse(null);
+                CommonAttachmentIndex index = TimelessAPI.getCommonAttachmentIndex(accessoryId).orElse(null);
                 if (index != null) {
                     var m = index.getData().getModifier().get(id);
                     boolean value = resolve(m, resolver, clazz);

@@ -44,4 +44,9 @@ public record ServerMessageSyncBaseTimestamp() implements CustomPacketPayload {
     public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ServerMessageSyncBaseTimestamp;
+    }
 }

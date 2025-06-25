@@ -6,8 +6,8 @@ import com.tacz.guns.api.GunProperties;
 import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.InaccuracyType;
 import net.minecraft.world.item.ItemStack;
@@ -51,7 +51,7 @@ public class AimInaccuracyModifier implements IAttachmentModifier<Map<Inaccuracy
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         return List.of();
     }
 

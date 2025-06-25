@@ -1,5 +1,6 @@
 package com.tacz.guns.entity.sync.core;
 
+import com.mojang.serialization.JsonOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
@@ -282,28 +283,6 @@ public class Serializers {
         public UUID read(Tag tag) {
             CompoundTag compound = (CompoundTag) tag;
             return new UUID(compound.getLong("Most"), compound.getLong("Least"));
-        }
-    };
-
-    public static final IDataSerializer<ItemStack> ITEM_STACK = new IDataSerializer<>() {
-        @Override
-        public void write(FriendlyByteBuf buf, ItemStack value) {
-            buf.writeItem(value);
-        }
-
-        @Override
-        public ItemStack read(FriendlyByteBuf buf) {
-            return buf.readItem();
-        }
-
-        @Override
-        public Tag write(ItemStack value) {
-            return value.save(new CompoundTag());
-        }
-
-        @Override
-        public ItemStack read(Tag tag) {
-            return ItemStack.of((CompoundTag) tag);
         }
     };
 

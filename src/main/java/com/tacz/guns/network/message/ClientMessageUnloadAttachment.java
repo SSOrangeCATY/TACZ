@@ -2,9 +2,9 @@ package com.tacz.guns.network.message;
 
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.network.NetworkHandler;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 
-public record ClientMessageUnloadAttachment(int gunSlotIndex,AttachmentType attachmentType) implements CustomPacketPayload {
+public record ClientMessageUnloadAttachment(int gunSlotIndex, AccessoryType accessoryType) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<ClientMessageUnloadAttachment> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_unload_attachment"));
@@ -25,8 +25,8 @@ public record ClientMessageUnloadAttachment(int gunSlotIndex,AttachmentType atta
     public static final StreamCodec<ByteBuf, ClientMessageUnloadAttachment> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.VAR_INT,
             ClientMessageUnloadAttachment::gunSlotIndex,
-            AttachmentType.STREAM_CODEC,
-            ClientMessageUnloadAttachment::attachmentType,
+            AccessoryType.STREAM_CODEC,
+            ClientMessageUnloadAttachment::accessoryType,
             ClientMessageUnloadAttachment::new
     );
 
@@ -42,13 +42,13 @@ public record ClientMessageUnloadAttachment(int gunSlotIndex,AttachmentType atta
             ItemStack gunItem = inventory.getItem(data.gunSlotIndex);
             IGun iGun = IGun.getIGunOrNull(gunItem);
             if (iGun != null) {
-                ItemStack attachmentItem = iGun.getAttachment(gunItem, data.attachmentType);
-                if (!attachmentItem.isEmpty() && inventory.add(attachmentItem)) {
-                    iGun.unloadAttachment(gunItem, data.attachmentType);
+                ItemStack accessoryItem = iGun.getAccessory(gunItem, data.accessoryType);
+                if (!accessoryItem.isEmpty() && inventory.add(accessoryItem)) {
+                    iGun.unloadAccessory(gunItem, data.accessoryType);
                     // 刷新配件数据
-                    AttachmentPropertyManager.postChangeEvent(player, gunItem);
+                    AccessoryPropertyManager.postChangeEvent(player, gunItem);
                     // 如果卸载的是扩容弹匣，吐出所有子弹
-                    if (data.attachmentType == AttachmentType.EXTENDED_MAG) {
+                    if (data.accessoryType == AccessoryType.EXTENDED_MAG) {
                         iGun.dropAllAmmo(player, gunItem);
                     }
                     player.inventoryMenu.broadcastChanges();

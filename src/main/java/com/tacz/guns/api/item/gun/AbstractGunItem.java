@@ -4,7 +4,7 @@ import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.entity.ReloadState;
 import com.tacz.guns.api.item.*;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
 import com.tacz.guns.client.renderer.item.GunItemRendererWrapper;
@@ -15,9 +15,10 @@ import com.tacz.guns.resource.index.CommonGunIndex;
 import com.tacz.guns.resource.pojo.data.gun.FeedType;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.util.AllowAttachmentTagMatcher;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -27,7 +28,6 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -130,7 +130,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
         }
 
         int currentAmmoCount = getCurrentAmmoCount(gunItem);
-        int maxAmmoCount = AttachmentDataUtils.getAmmoCountWithAttachment(gunItem, gunIndex.getGunData());
+        int maxAmmoCount = AccessoryDataUtils.getAmmoCountWithAttachment(gunItem, gunIndex.getGunData());
         if (currentAmmoCount >= maxAmmoCount) {
             return false;
         }
@@ -196,7 +196,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
             ResourceLocation ammoId = index.getGunData().getAmmoId();
             // 创造模式类型的换弹，只填满子弹总数，不进行任何卸载弹药逻辑
             if (player.isCreative()) {
-                int maxAmmCount = AttachmentDataUtils.getAmmoCountWithAttachment(gunItem, index.getGunData());
+                int maxAmmCount = AccessoryDataUtils.getAmmoCountWithAttachment(gunItem, index.getGunData());
                 setCurrentAmmoCount(gunItem, maxAmmCount);
                 return;
             }
@@ -285,12 +285,12 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
      * 检查枪械是否允许安装指定的物品作为配件
      */
     @Override
-    public boolean allowAttachment(ItemStack gun, ItemStack attachmentItem) {
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachmentItem);
+    public boolean allowAccessory(ItemStack gun, ItemStack attachmentItem) {
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachmentItem);
         IGun iGun = IGun.getIGunOrNull(gun);
         if (iGun != null && iAttachment != null) {
             ResourceLocation gunId = iGun.getGunId(gun);
-            ResourceLocation attachmentId = iAttachment.getAttachmentId(attachmentItem);
+            ResourceLocation attachmentId = iAttachment.getAccessoryId(attachmentItem);
             return AllowAttachmentTagMatcher.match(gunId, attachmentId);
         }
         return false;
@@ -300,11 +300,11 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
      * 检查枪械是否允许安装某种类型的配件
      */
     @Override
-    public boolean allowAttachmentType(ItemStack gun, AttachmentType type) {
+    public boolean allowAccessoryType(ItemStack gun, AccessoryType type) {
         IGun iGun = IGun.getIGunOrNull(gun);
         if (iGun != null) {
             return TimelessAPI.getCommonGunIndex(iGun.getGunId(gun)).map(gunIndex -> {
-                List<AttachmentType> allowAttachments = gunIndex.getGunData().getAllowAttachments();
+                List<AccessoryType> allowAttachments = gunIndex.getGunData().getAllowAttachments();
                 if (allowAttachments == null) {
                     return false;
                 }
@@ -348,6 +348,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
                         .setHeatData(gunData.hasHeatData())
                         .setAmmoInBarrel(true)
                         .build();
+                itemStack.set(DataComponents.ITEM_NAME,Component.translatable(index.getPojo().getName()));
                 stacks.add(itemStack);
             }
         });

@@ -3,7 +3,7 @@ package com.tacz.guns.api.item.builder;
 import com.google.common.collect.Maps;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.item.gun.GunItemManager;
@@ -22,7 +22,7 @@ public final class GunItemBuilder {
     private ResourceLocation gunId;
     private FireMode fireMode = FireMode.UNKNOWN;
     private boolean bulletInBarrel = false;
-    private EnumMap<AttachmentType, ResourceLocation> attachments = Maps.newEnumMap(AttachmentType.class);
+    private EnumMap<AccessoryType, ResourceLocation> attachments = Maps.newEnumMap(AccessoryType.class);
 
     private GunItemBuilder() {
     }
@@ -56,12 +56,12 @@ public final class GunItemBuilder {
         return this;
     }
 
-    public GunItemBuilder putAttachment(AttachmentType type, ResourceLocation attachmentId) {
+    public GunItemBuilder putAttachment(AccessoryType type, ResourceLocation attachmentId) {
         this.attachments.put(type, attachmentId);
         return this;
     }
 
-    public GunItemBuilder putAllAttachment(EnumMap<AttachmentType, ResourceLocation> attachments) {
+    public GunItemBuilder putAllAttachment(EnumMap<AccessoryType, ResourceLocation> attachments) {
         this.attachments = attachments;
         return this;
     }
@@ -85,7 +85,7 @@ public final class GunItemBuilder {
             if(heatData) iGun.setHeatAmount(gun, 0f);
             this.attachments.forEach((type, id) -> {
                 ItemStack attachmentStack = AttachmentItemBuilder.create().setId(id).build();
-                iGun.installAttachment(gun, attachmentStack);
+                iGun.installAccessory(gun, attachmentStack);
             });
         }
         return gun;
@@ -109,8 +109,8 @@ public final class GunItemBuilder {
             iGun.setCurrentAmmoCount(gun, this.ammoCount);
             iGun.setBulletInBarrel(gun, this.bulletInBarrel);
             this.attachments.forEach((type, id) -> {
-                ItemStack attachmentStack = AttachmentItemBuilder.create().setId(id).build();
-                iGun.installAttachment(gun, attachmentStack);
+                ItemStack accessoryStack = AttachmentItemBuilder.create().setId(id).build();
+                iGun.installAccessory(gun, accessoryStack);
             });
         }
         return gun;

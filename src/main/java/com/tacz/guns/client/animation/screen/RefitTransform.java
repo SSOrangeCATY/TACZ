@@ -1,7 +1,7 @@
 package com.tacz.guns.client.animation.screen;
 
 import com.tacz.guns.GunMod;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.gui.GunRefitScreen;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -18,16 +18,16 @@ public class RefitTransform {
     private static final float REFIT_SCREEN_TRANSFORM_TIMES = 0.25f;
     private static float refitScreenTransformProgress = 1;
     private static long refitScreenTransformTimestamp = -1;
-    private static AttachmentType oldTransformType = AttachmentType.NONE;
-    private static AttachmentType currentTransformType = AttachmentType.NONE;
+    private static AccessoryType oldTransformType = AccessoryType.NONE;
+    private static AccessoryType currentTransformType = AccessoryType.NONE;
     private static float refitScreenOpeningProgress = 0;
     private static long refitScreenOpeningTimestamp = -1;
 
     public static void init() {
         refitScreenTransformProgress = 1;
         refitScreenTransformTimestamp = System.currentTimeMillis();
-        oldTransformType = AttachmentType.NONE;
-        currentTransformType = AttachmentType.NONE;
+        oldTransformType = AccessoryType.NONE;
+        currentTransformType = AccessoryType.NONE;
     }
 
     public static float getOpeningProgress() {
@@ -35,20 +35,20 @@ public class RefitTransform {
     }
 
     @Nonnull
-    public static AttachmentType getOldTransformType() {
-        return Objects.requireNonNullElse(oldTransformType, AttachmentType.NONE);
+    public static AccessoryType getOldTransformType() {
+        return Objects.requireNonNullElse(oldTransformType, AccessoryType.NONE);
     }
 
     @Nonnull
-    public static AttachmentType getCurrentTransformType() {
-        return Objects.requireNonNullElse(currentTransformType, AttachmentType.NONE);
+    public static AccessoryType getCurrentTransformType() {
+        return Objects.requireNonNullElse(currentTransformType, AccessoryType.NONE);
     }
 
     public static float getTransformProgress() {
         return refitScreenTransformProgress;
     }
 
-    public static boolean changeRefitScreenView(AttachmentType attachmentType) {
+    public static boolean changeRefitScreenView(AccessoryType attachmentType) {
         if (refitScreenTransformProgress != 1 || refitScreenOpeningProgress != 1) {
             return false;
         }
@@ -60,7 +60,7 @@ public class RefitTransform {
     }
 
     @SubscribeEvent
-    public static void tickInterpolation(RenderGuiEvent event) {
+    public static void tickInterpolation(RenderGuiEvent.Pre event) {
         // tick opening progress
         if (refitScreenOpeningTimestamp == -1) {
             refitScreenOpeningTimestamp = System.currentTimeMillis();

@@ -29,4 +29,8 @@ public class ServerMessageSwapItem implements CustomPacketPayload {
         return TYPE;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ServerMessageSwapItem;
+    }
 }

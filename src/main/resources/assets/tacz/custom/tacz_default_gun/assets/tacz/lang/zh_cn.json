@@ -2,7 +2,6 @@
   "pack.tacz.tacz_default_gun.name": "TAC Zero 默认枪械包",
   "pack.tacz.tacz_default_gun.desc": "TaCZ默认枪械包；最具盛名，最经典，最独特，最为人所熟知的枪械。",
 
-
   "tacz.type.ammo.name": "子弹",
   "tacz.type.pistol.name": "手枪",
   "tacz.type.rifle.name": "步枪",
@@ -19,7 +18,6 @@
   "tacz.type.laser.name": "激光指示器",
   "tacz.type.misc.name": "杂项",
   "tacz.type.unknown.name": "未命名分类",
-
 
   "tacz.gun.ak47.name": "AKM 突击步枪",
   "tacz.gun.deagle.name": ".50 沙漠之鹰",

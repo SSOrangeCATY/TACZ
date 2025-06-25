@@ -2,170 +2,184 @@ package com.tacz.guns.api.item.nbt;
 
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
+import com.tacz.guns.api.item.accessory.AccessoryMap;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
+import com.tacz.guns.api.item.component.AccessoryComponents;
+import com.tacz.guns.api.item.component.GunComponents;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.client.resource.GunDisplayInstance;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
-import com.tacz.guns.init.ModDataComponentTypes;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 
 public interface GunItemDataAccessor extends IGun {
     String GUN_ID_TAG = "GunId";
-    String GUN_FIRE_MODE_TAG = "GunFireMode";
-    String GUN_HAS_BULLET_IN_BARREL = "HasBulletInBarrel";
-    String GUN_CURRENT_AMMO_COUNT_TAG = "GunCurrentAmmoCount";
-    String GUN_ATTACHMENT_BASE = "Attachment";
-    String GUN_EXP_TAG = "GunLevelExp";
-    String GUN_DUMMY_AMMO = "DummyAmmo";
-    String GUN_MAX_DUMMY_AMMO = "MaxDummyAmmo";
-    String GUN_ATTACHMENT_LOCK = "AttachmentLock";
-    String GUN_DISPLAY_ID_TAG = "GunDisplayId";
-    String LASER_COLOR_TAG = "LaserColor";
-    String GUN_OVERHEAT_TAG = "HeatAmount";
-    String GUN_OVERHEAT_LOCK_TAG = "OverHeated";
-
-    @Override
-    default CompoundTag getData(ItemStack gun){
-        if(gun.getItem() instanceof GunItemDataAccessor){
-            return gun.get(ModDataComponentTypes.DATA).getUnsafe();
-        }
-
-        return new CompoundTag();
-    }
-
 
     @Override
     default boolean useDummyAmmo(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        return nbt.contains(GUN_DUMMY_AMMO, Tag.TAG_INT);
+        return gun.has(GunComponents.DUMMY_AMMO);
     }
 
     @Override
     default int getDummyAmmoAmount(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        return Math.max(0, nbt.getInt(GUN_DUMMY_AMMO));
+        return Math.max(0, gun.getOrDefault(GunComponents.DUMMY_AMMO, 0));
     }
 
     @Override
     default void setDummyAmmoAmount(ItemStack gun, int amount) {
-        CompoundTag nbt = getData(gun);
-        nbt.putInt(GUN_DUMMY_AMMO, Math.max(amount, 0));
+        gun.set(GunComponents.DUMMY_AMMO, Math.max(amount, 0));
     }
 
     @Override
     default void addDummyAmmoAmount(ItemStack gun, int amount) {
-        if (!useDummyAmmo(gun)) {
-            return;
-        }
-        int maxDummyAmmo = Integer.MAX_VALUE;
-        if (hasMaxDummyAmmo(gun)) {
-            maxDummyAmmo = getMaxDummyAmmoAmount(gun);
-        }
-        CompoundTag nbt = getData(gun);
-        amount = Math.min(getDummyAmmoAmount(gun) + amount, maxDummyAmmo);
-        nbt.putInt(GUN_DUMMY_AMMO, Math.max(amount, 0));
+        if (!useDummyAmmo(gun)) return;
+        int maxDummyAmmo = hasMaxDummyAmmo(gun) ? getMaxDummyAmmoAmount(gun) : Integer.MAX_VALUE;
+        int newAmount = Math.min(getDummyAmmoAmount(gun) + amount, maxDummyAmmo);
+        setDummyAmmoAmount(gun, Math.max(newAmount, 0));
     }
 
     @Override
     default boolean hasMaxDummyAmmo(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        return nbt.contains(GUN_MAX_DUMMY_AMMO, Tag.TAG_INT);
+        return gun.has(GunComponents.MAX_DUMMY_AMMO);
     }
 
     @Override
     default int getMaxDummyAmmoAmount(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        return Math.max(0, nbt.getInt(GUN_MAX_DUMMY_AMMO));
+        return Math.max(0, gun.getOrDefault(GunComponents.MAX_DUMMY_AMMO, 0));
     }
 
     @Override
     default void setMaxDummyAmmoAmount(ItemStack gun, int amount) {
-        CompoundTag nbt = getData(gun);
-        nbt.putInt(GUN_MAX_DUMMY_AMMO, Math.max(amount, 0));
+        gun.set(GunComponents.MAX_DUMMY_AMMO, Math.max(amount, 0));
+    }
+
+    @Override
+    default float getAimingZoom(ItemStack gunItem) {
+        float zoom = 1;
+        ResourceLocation scopeId = this.getAccessoryId(gunItem, AccessoryType.SCOPE);
+        boolean builtin = false;
+        if (scopeId.equals(DefaultAssets.EMPTY_ATTACHMENT_ID)) {
+            scopeId = getBuiltInAccessoryId(gunItem, AccessoryType.SCOPE);
+            builtin = true;
+        }
+        if (!DefaultAssets.isEmptyAttachmentId(scopeId)) {
+            ItemStack scope = this.getAccessory(gunItem, AccessoryType.SCOPE);
+            int zoomNumber = builtin ? 0 : AccessoryItemDataAccessor.getZoomNumberFromItemStack(scope);
+            float[] zooms = TimelessAPI.getClientAttachmentIndex(scopeId).map(ClientAccessoryIndex::getZoom).orElse(null);
+            if (zooms != null) {
+                zoom = zooms[zoomNumber % zooms.length];
+            }
+        } else {
+            zoom = TimelessAPI.getGunDisplay(gunItem).map(GunDisplayInstance::getIronZoom).orElse(1f);
+        }
+        return zoom;
     }
 
     @Override
     default boolean hasAttachmentLock(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_ATTACHMENT_LOCK, Tag.TAG_BYTE)) {
-            return nbt.getBoolean(GUN_ATTACHMENT_LOCK);
-        }
-        return false;
+        return gun.getOrDefault(GunComponents.ATTACHMENT_LOCK, false);
     }
 
     @Override
     default void setAttachmentLock(ItemStack gun, boolean lock) {
-        CompoundTag nbt = getData(gun);
-        nbt.putBoolean(GUN_ATTACHMENT_LOCK, lock);
+        gun.set(GunComponents.ATTACHMENT_LOCK, lock);
+    }
+
+    @Override
+    @Nonnull
+    default ItemStack getAccessory(ItemStack gun, AccessoryType type) {
+        if (!allowAccessoryType(gun, type)) {
+            return ItemStack.EMPTY;
+        }
+        return gun.getOrDefault(GunComponents.ATTACHMENTS,new AccessoryMap()).get(type);
+    }
+
+    @Override
+    @NotNull
+    default ItemStack getBuiltinAccessory(ItemStack gun, AccessoryType type) {
+        IGun iGun = IGun.getIGunOrNull(gun);
+        if (iGun == null) {
+            return ItemStack.EMPTY;
+        }
+        CommonGunIndex index = TimelessAPI.getCommonGunIndex(iGun.getGunId(gun)).orElse(null);
+        if (index != null){
+            var builtin = index.getGunData().getBuiltInAccessories();
+            if (builtin.containsKey(type)) {
+                return AttachmentItemBuilder.create().setId(builtin.get(type)).build();
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    default ResourceLocation getBuiltInAccessoryId(ItemStack gun, AccessoryType type) {
+        IGun iGun = IGun.getIGunOrNull(gun);
+        if (iGun == null) {
+            return DefaultAssets.EMPTY_ATTACHMENT_ID;
+        }
+        CommonGunIndex index = TimelessAPI.getCommonGunIndex(iGun.getGunId(gun)).orElse(null);
+        if (index != null){
+            var builtin = index.getGunData().getBuiltInAccessories();
+            if (builtin.containsKey(type)) {
+                return builtin.get(type);
+            }
+        }
+        return DefaultAssets.EMPTY_ATTACHMENT_ID;
+    }
+
+    @Override
+    @Nonnull
+    default ResourceLocation getAccessoryId(ItemStack gun, AccessoryType type) {
+        return gun.getOrDefault(AccessoryComponents.ACCESSORY_ID,DefaultAssets.EMPTY_ATTACHMENT_ID);
     }
 
     @Override
     @Nonnull
     default ResourceLocation getGunId(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_ID_TAG, Tag.TAG_STRING)) {
-            ResourceLocation gunId = ResourceLocation.tryParse(nbt.getString(GUN_ID_TAG));
-            return Objects.requireNonNullElse(gunId, DefaultAssets.EMPTY_GUN_ID);
-        }
-        return DefaultAssets.EMPTY_GUN_ID;
+        return gun.getOrDefault(GunComponents.GUN_ID, DefaultAssets.EMPTY_GUN_ID);
     }
 
     @Override
     default void setGunId(ItemStack gun, @Nullable ResourceLocation gunId) {
-        CompoundTag nbt = getData(gun);
         if (gunId != null) {
-            nbt.putString(GUN_ID_TAG, gunId.toString());
+            gun.set(GunComponents.GUN_ID, gunId);
+        } else {
+            gun.remove(GunComponents.GUN_ID);
         }
     }
 
     @Override
     @NotNull
     default ResourceLocation getGunDisplayId(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_DISPLAY_ID_TAG, Tag.TAG_STRING)) {
-            ResourceLocation gunDisplayId = ResourceLocation.tryParse(nbt.getString(GUN_DISPLAY_ID_TAG));
-            return Objects.requireNonNullElse(gunDisplayId, DefaultAssets.DEFAULT_GUN_DISPLAY_ID);
-        }
-        return DefaultAssets.DEFAULT_GUN_DISPLAY_ID;
+        return gun.getOrDefault(GunComponents.GUN_DISPLAY_ID, DefaultAssets.DEFAULT_GUN_DISPLAY_ID);
     }
 
     @Override
     default void setGunDisplayId(ItemStack gun, ResourceLocation displayId) {
-        CompoundTag nbt = getData(gun);
         if (displayId != null) {
-            nbt.putString(GUN_DISPLAY_ID_TAG, displayId.toString());
+            gun.set(GunComponents.GUN_DISPLAY_ID, displayId);
+        } else {
+            gun.remove(GunComponents.GUN_DISPLAY_ID);
         }
     }
 
     @Override
     default int getLevel(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_EXP_TAG, Tag.TAG_INT)) {
-            return getLevel(nbt.getInt(GUN_EXP_TAG));
-        }
-        return 0;
+        return getLevel(getExp(gun));
     }
 
     @Override
     default int getExp(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_EXP_TAG, Tag.TAG_INT)) {
-            return nbt.getInt(GUN_EXP_TAG);
-        }
-        return 0;
+        return gun.getOrDefault(GunComponents.GUN_EXP, 0);
     }
 
     @Override
@@ -190,234 +204,111 @@ public interface GunItemDataAccessor extends IGun {
         }
     }
 
+    default void setExp(ItemStack gun, int exp) {
+        gun.set(GunComponents.GUN_EXP, exp);
+    }
+
     @Override
     default FireMode getFireMode(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_FIRE_MODE_TAG, Tag.TAG_STRING)) {
-            return FireMode.valueOf(nbt.getString(GUN_FIRE_MODE_TAG));
+        String mode = gun.getOrDefault(GunComponents.FIRE_MODE, FireMode.UNKNOWN.name());
+        try {
+            return FireMode.valueOf(mode);
+        } catch (IllegalArgumentException e) {
+            return FireMode.UNKNOWN;
         }
-        return FireMode.UNKNOWN;
     }
 
     @Override
     default void setFireMode(ItemStack gun, @Nullable FireMode fireMode) {
-        CompoundTag nbt = getData(gun);
-        if (fireMode != null) {
-            nbt.putString(GUN_FIRE_MODE_TAG, fireMode.name());
-            return;
-        }
-        nbt.putString(GUN_FIRE_MODE_TAG, FireMode.UNKNOWN.name());
+        gun.set(GunComponents.FIRE_MODE, (fireMode != null ? fireMode : FireMode.UNKNOWN).name());
     }
 
     @Override
     default int getCurrentAmmoCount(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_CURRENT_AMMO_COUNT_TAG, Tag.TAG_INT)) {
-            return nbt.getInt(GUN_CURRENT_AMMO_COUNT_TAG);
-        }
-        return 0;
+        return gun.getOrDefault(GunComponents.CURRENT_AMMO, 0);
     }
 
     @Override
     default void setCurrentAmmoCount(ItemStack gun, int ammoCount) {
-        CompoundTag nbt = getData(gun);
-        nbt.putInt(GUN_CURRENT_AMMO_COUNT_TAG, Math.max(ammoCount, 0));
+        gun.set(GunComponents.CURRENT_AMMO, Math.max(ammoCount, 0));
     }
 
     @Override
     default void reduceCurrentAmmoCount(ItemStack gun) {
-        // 只在不使用背包直读的情况下减少 AmmoCount
         if (!useInventoryAmmo(gun)) {
             setCurrentAmmoCount(gun, getCurrentAmmoCount(gun) - 1);
         }
     }
 
     @Override
-    @Nullable
-    default CompoundTag getAttachmentTag(ItemStack gun, AttachmentType type) {
-        if (!allowAttachmentType(gun, type)) {
-            return null;
-        }
-        CompoundTag nbt = getData(gun);
-        String key = GUN_ATTACHMENT_BASE + type.name();
-        if (nbt.contains(key, Tag.TAG_COMPOUND)) {
-            CompoundTag allItemStackTag = nbt.getCompound(key);
-            if (allItemStackTag.contains("tag", Tag.TAG_COMPOUND)) {
-                return allItemStackTag.getCompound("tag");
-            }
-        }
-        return null;
+    default void installAccessory(@Nonnull ItemStack gun, @Nonnull ItemStack attachment) {
+        if (!allowAccessory(gun, attachment)) return;
+
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachment);
+        if (iAttachment == null) return;
+
+        AccessoryMap map = gun.getOrDefault(GunComponents.ATTACHMENTS, new AccessoryMap());
+        map.put(iAttachment.getType(attachment), attachment.copy());
+        gun.set(GunComponents.ATTACHMENTS, map);
     }
 
     @Override
-    @NotNull
-    default ItemStack getBuiltinAttachment(ItemStack gun, AttachmentType type) {
-        IGun iGun = IGun.getIGunOrNull(gun);
-        if (iGun == null) {
-            return ItemStack.EMPTY;
-        }
-        CommonGunIndex index = TimelessAPI.getCommonGunIndex(iGun.getGunId(gun)).orElse(null);
-        if (index != null){
-            var builtin = index.getGunData().getBuiltInAttachments();
-            if (builtin.containsKey(type)) {
-                return AttachmentItemBuilder.create().setId(builtin.get(type)).build();
-            }
-        }
-        return ItemStack.EMPTY;
-    }
+    default void unloadAccessory(@Nonnull ItemStack gun, AccessoryType type) {
+        if (!allowAccessoryType(gun, type)) return;
 
-    @Override
-    @Nonnull
-    default ItemStack getAttachment(ItemStack gun, AttachmentType type) {
-        if (!allowAttachmentType(gun, type)) {
-            return ItemStack.EMPTY;
-        }
-        CompoundTag nbt = getData(gun);
-        String key = GUN_ATTACHMENT_BASE + type.name();
-        if (nbt.contains(key, Tag.TAG_COMPOUND)) {
-            return ItemStack.parseOptional(ServerLifecycleHooks.getCurrentServer().registryAccess(), nbt.getCompound(key));
-        }
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    @NotNull
-    default ResourceLocation getBuiltInAttachmentId(ItemStack gun, AttachmentType type) {
-        IGun iGun = IGun.getIGunOrNull(gun);
-        if (iGun == null) {
-            return DefaultAssets.EMPTY_ATTACHMENT_ID;
-        }
-        CommonGunIndex index = TimelessAPI.getCommonGunIndex(iGun.getGunId(gun)).orElse(null);
-        if (index != null){
-            var builtin = index.getGunData().getBuiltInAttachments();
-            if (builtin.containsKey(type)) {
-                return builtin.get(type);
-            }
-        }
-        return DefaultAssets.EMPTY_ATTACHMENT_ID;
-    }
-
-    @Override
-    @Nonnull
-    default ResourceLocation getAttachmentId(ItemStack gun, AttachmentType type) {
-        CompoundTag attachmentTag = this.getAttachmentTag(gun, type);
-        if (attachmentTag != null) {
-            return AttachmentItemDataAccessor.getAttachmentIdFromTag(attachmentTag);
-        }
-        return DefaultAssets.EMPTY_ATTACHMENT_ID;
-    }
-
-    @Override
-    default void installAttachment(@Nonnull ItemStack gun, @Nonnull ItemStack attachment) {
-        if (!allowAttachment(gun, attachment)) {
-            return;
-        }
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachment);
-        if (iAttachment == null) {
-            return;
-        }
-        CompoundTag nbt = getData(gun);
-        String key = GUN_ATTACHMENT_BASE + iAttachment.getType(attachment).name();
-        Tag tag = attachment.save(ServerLifecycleHooks.getCurrentServer().registryAccess());
-        nbt.put(key, tag);
-    }
-
-    @Override
-    default void unloadAttachment(@Nonnull ItemStack gun, AttachmentType type) {
-        if (!allowAttachmentType(gun, type)) {
-            return;
-        }
-        CompoundTag nbt = getData(gun);
-        String key = GUN_ATTACHMENT_BASE + type.name();
-        Tag tag = ItemStack.EMPTY.save(ServerLifecycleHooks.getCurrentServer().registryAccess());
-        nbt.put(key, tag);
-    }
-
-    @Override
-    default float getAimingZoom(ItemStack gunItem) {
-        float zoom = 1;
-        ResourceLocation scopeId = this.getAttachmentId(gunItem, AttachmentType.SCOPE);
-        boolean builtin = false;
-        if (scopeId.equals(DefaultAssets.EMPTY_ATTACHMENT_ID)) {
-            scopeId = getBuiltInAttachmentId(gunItem, AttachmentType.SCOPE);
-            builtin = true;
-        }
-        if (!DefaultAssets.isEmptyAttachmentId(scopeId)) {
-            CompoundTag attachmentTag = this.getAttachmentTag(gunItem, AttachmentType.SCOPE);
-            int zoomNumber = builtin ? 0 : AttachmentItemDataAccessor.getZoomNumberFromTag(attachmentTag);
-            float[] zooms = TimelessAPI.getClientAttachmentIndex(scopeId).map(ClientAttachmentIndex::getZoom).orElse(null);
-            if (zooms != null) {
-                zoom = zooms[zoomNumber % zooms.length];
-            }
-        } else {
-            zoom = TimelessAPI.getGunDisplay(gunItem).map(GunDisplayInstance::getIronZoom).orElse(1f);
-        }
-        return zoom;
+        AccessoryMap map = gun.getOrDefault(GunComponents.ATTACHMENTS, new AccessoryMap());
+        map.remove(type);
+        gun.set(GunComponents.ATTACHMENTS, map);
     }
 
     @Override
     default boolean hasBulletInBarrel(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (nbt.contains(GUN_HAS_BULLET_IN_BARREL, Tag.TAG_BYTE)) {
-            return nbt.getBoolean(GUN_HAS_BULLET_IN_BARREL);
-        }
-        return false;
+        return gun.getOrDefault(GunComponents.BULLET_IN_BARREL, false);
     }
 
     @Override
     default void setBulletInBarrel(ItemStack gun, boolean bulletInBarrel) {
-        CompoundTag nbt = getData(gun);
-        nbt.putBoolean(GUN_HAS_BULLET_IN_BARREL, bulletInBarrel);
+        gun.set(GunComponents.BULLET_IN_BARREL, bulletInBarrel);
     }
 
     @Override
     default boolean hasCustomLaserColor(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        return nbt.contains(LASER_COLOR_TAG, Tag.TAG_INT);
+        return gun.has(AccessoryComponents.LASER_COLOR);
     }
 
     @Override
     default int getLaserColor(ItemStack gun) {
-        CompoundTag nbt = getData(gun);
-        if (!hasCustomLaserColor(gun)) {
-            return 0xFF0000;
-        }
-        return nbt.getInt(LASER_COLOR_TAG);
+        return gun.getOrDefault(AccessoryComponents.LASER_COLOR, 0xFF0000);
     }
 
     @Override
     default void setLaserColor(ItemStack gun, int color) {
-        CompoundTag nbt = getData(gun);
-        nbt.putInt(LASER_COLOR_TAG, color);
+        gun.set(AccessoryComponents.LASER_COLOR, color);
     }
 
-    /**
-     * Heat Data
-     */
     @Override
     default boolean hasHeatData(ItemStack gun) {
-        return getData(gun).contains(GUN_OVERHEAT_TAG, Tag.TAG_FLOAT);
+        return gun.has(GunComponents.HEAT_AMOUNT);
     }
 
     @Override
     default boolean isOverheatLocked(ItemStack gun) {
-        return getData(gun).getBoolean(GUN_OVERHEAT_LOCK_TAG);
+        return gun.getOrDefault(GunComponents.OVERHEAT_LOCK, false);
     }
 
     @Override
     default void setOverheatLocked(ItemStack gun, boolean locked) {
-        getData(gun).putBoolean(GUN_OVERHEAT_LOCK_TAG, locked);
+        gun.set(GunComponents.OVERHEAT_LOCK, locked);
     }
 
     @Override
     default float getHeatAmount(ItemStack gun) {
-        if(hasHeatData(gun)) return getData(gun).getFloat(GUN_OVERHEAT_TAG);
-        return 0f;
+        return gun.getOrDefault(GunComponents.HEAT_AMOUNT,0f);
     }
 
     @Override
     default void setHeatAmount(ItemStack gun, float amount) {
-        getData(gun).putFloat(GUN_OVERHEAT_TAG, amount >= 0 ? amount : 0f);
+        gun.set(GunComponents.HEAT_AMOUNT, Math.max(amount, 0f));
     }
 
     @Override

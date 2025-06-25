@@ -7,8 +7,8 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.ExplosionData;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.ChatFormatting;
@@ -64,16 +64,16 @@ public class ExplosionModifier implements IAttachmentModifier<ExplosionModifier.
             delayValues.add(v.delay);
         });
 
-        boolean explode = cacheValue.isExplode() || AttachmentPropertyManager.eval(explodeValues, false);
+        boolean explode = cacheValue.isExplode() || AccessoryPropertyManager.eval(explodeValues, false);
         // 如果还是没有爆炸，那就没必要计算后面数值了
         if (!explode) {
             return;
         }
-        float radius = (float) AttachmentPropertyManager.eval(radiusValues, cacheValue.getRadius());
-        float damage = (float) AttachmentPropertyManager.eval(damageValues, cacheValue.getDamage());
-        boolean knockback = AttachmentPropertyManager.eval(knockbackValues, false);
-        boolean destroyBlock = AttachmentPropertyManager.eval(destroyBlockValues, false);
-        float delay = (float) AttachmentPropertyManager.eval(delayValues, cacheValue.getDelay());
+        float radius = (float) AccessoryPropertyManager.eval(radiusValues, cacheValue.getRadius());
+        float damage = (float) AccessoryPropertyManager.eval(damageValues, cacheValue.getDamage());
+        boolean knockback = AccessoryPropertyManager.eval(knockbackValues, false);
+        boolean destroyBlock = AccessoryPropertyManager.eval(destroyBlockValues, false);
+        float delay = (float) AccessoryPropertyManager.eval(delayValues, cacheValue.getDelay());
         ExplosionData explosionData = new ExplosionData(true, radius, damage, knockback, delay, destroyBlock);
         cache.setValue(explosionData);
     }

@@ -1,15 +1,13 @@
 package com.tacz.guns.api.item;
 
 import com.tacz.guns.api.DefaultAssets;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
 import com.tacz.guns.api.item.gun.FireMode;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -71,8 +69,6 @@ public interface IGun {
         }
         return FireMode.UNKNOWN;
     }
-
-    CompoundTag getData(ItemStack gun);
 
     /**
      * 获取瞄准放大倍率
@@ -233,24 +229,18 @@ public interface IGun {
     void dropAllAmmo(Player player, ItemStack gun);
 
     /**
-     * 获取当前枪械指定类型的配件
-     */
-    @Nonnull
-    ItemStack getAttachment(ItemStack gun, AttachmentType type);
-
-    @Nonnull
-    ItemStack getBuiltinAttachment(ItemStack gun, AttachmentType type);
-
-    /**
-     * 获取当前枪械指定类型的配件的 NBT 数据
+     * 获取当前枪械指定类型的配件的 ItemStack
      *
      * @return 如果为空，那么没有配件数据
      */
-    @Nullable
-    CompoundTag getAttachmentTag(ItemStack gun, AttachmentType type);
+    @Nonnull
+    ItemStack getAccessory(ItemStack gun, AccessoryType type);
 
     @Nonnull
-    ResourceLocation getBuiltInAttachmentId(ItemStack gun, AttachmentType type);
+    ItemStack getBuiltinAccessory(ItemStack gun, AccessoryType type);
+
+    @Nonnull
+    ResourceLocation getBuiltInAccessoryId(ItemStack gun, AccessoryType type);
 
     /**
      * 获取枪械的配件 ID
@@ -258,27 +248,27 @@ public interface IGun {
      * 如果不存在，返回 {@link DefaultAssets#EMPTY_ATTACHMENT_ID};
      */
     @Nonnull
-    ResourceLocation getAttachmentId(ItemStack gun, AttachmentType type);
+    ResourceLocation getAccessoryId(ItemStack gun, AccessoryType type);
 
     /**
      * 安装配件
      */
-    void installAttachment(@Nonnull ItemStack gun, @Nonnull ItemStack attachment);
+    void installAccessory(@Nonnull ItemStack gun, @Nonnull ItemStack attachment);
 
     /**
      * 卸载配件
      */
-    void unloadAttachment(@Nonnull ItemStack gun, AttachmentType type);
+    void unloadAccessory(@Nonnull ItemStack gun, AccessoryType type);
 
     /**
      * 该枪械是否允许装配该配件
      */
-    boolean allowAttachment(ItemStack gun, ItemStack attachmentItem);
+    boolean allowAccessory(ItemStack gun, ItemStack attachmentItem);
 
     /**
      * 该枪械是否允许某类型配件
      */
-    boolean allowAttachmentType(ItemStack gun, AttachmentType type);
+    boolean allowAccessoryType(ItemStack gun, AccessoryType type);
 
     /**
      * 枪管中是否有子弹，用于闭膛待击的枪械

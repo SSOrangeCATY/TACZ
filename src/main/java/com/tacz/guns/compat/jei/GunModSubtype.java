@@ -51,8 +51,8 @@ public class GunModSubtype {
 
             @Override
             public @NotNull String getLegacyStringSubtypeInfo(ItemStack stack, @NotNull UidContext context) {
-                if (stack.getItem() instanceof IAttachment iAttachment) {
-                    return iAttachment.getAttachmentId(stack).toString();
+                if (stack.getItem() instanceof IAccessory iAttachment) {
+                    return iAttachment.getAccessoryId(stack).toString();
                 }
                 return "";
             }

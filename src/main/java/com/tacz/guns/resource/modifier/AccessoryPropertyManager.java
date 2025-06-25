@@ -9,7 +9,7 @@ import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.event.ChangeGunPropertyEvent;
 import com.tacz.guns.resource.modifier.custom.*;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class AttachmentPropertyManager {
+public class AccessoryPropertyManager {
     private static final ScriptEngine LUAJ_ENGINE = new LuaScriptEngineFactory().getScriptEngine();
     private static final Map<String, IAttachmentModifier<?, ?>> MODIFIERS = Maps.newLinkedHashMap();
 
@@ -57,7 +57,7 @@ public class AttachmentPropertyManager {
         }
         ResourceLocation gunId = iGun.getGunId(gunItem);
         TimelessAPI.getCommonGunIndex(gunId).ifPresent(index -> {
-            AttachmentCacheProperty cacheProperty = new AttachmentCacheProperty();
+            AccessoryCacheProperty cacheProperty = new AccessoryCacheProperty();
             // 发布事件
             AttachmentPropertyEvent event = new AttachmentPropertyEvent(gunItem, cacheProperty);
             ChangeGunPropertyEvent.internalOnAttachmentPropertyEvent(event);

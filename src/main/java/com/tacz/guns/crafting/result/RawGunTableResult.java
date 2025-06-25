@@ -1,19 +1,17 @@
 package com.tacz.guns.crafting.result;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
-import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.pojo.data.block.TabConfig;
 import com.tacz.guns.resource.pojo.data.recipe.GunResult;
 import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.PatchedDataComponentMap;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -39,11 +37,11 @@ public class RawGunTableResult {
                     Codec.INT.fieldOf("count").forGetter(RawGunTableResult::getCount),
                     ResourceLocation.CODEC.fieldOf("id").forGetter(RawGunTableResult::getId),
                     GunResult.CODEC.optionalFieldOf("extraData").forGetter(r -> Optional.ofNullable(r.extraData)),
-                    CompoundTag.CODEC.optionalFieldOf("nbt").forGetter(r -> Optional.ofNullable(r.nbt))
+                    DataComponentMap.CODEC.optionalFieldOf("components").forGetter(r -> Optional.ofNullable(r.components))
             ).apply(instance, (type, count, id, extraDataOpt, nbtOpt) -> {
                 RawGunTableResult result = new RawGunTableResult(type, id, count);
                 extraDataOpt.ifPresent(result::setExtraData);
-                nbtOpt.ifPresent(result::setNbt);
+                nbtOpt.ifPresent(result::setComponents);
                 return result;
             })
     );
@@ -57,12 +55,12 @@ public class RawGunTableResult {
             RawGunTableResult::getId,
             ByteBufCodecs.optional(GunResult.STREAM_CODEC),
             result -> Optional.ofNullable(result.extraData),
-            ByteBufCodecs.optional(ByteBufCodecs.COMPOUND_TAG),
-            result -> Optional.ofNullable(result.nbt),
+            ByteBufCodecs.optional(ByteBufCodecs.fromCodecWithRegistriesTrusted(DataComponentMap.CODEC)),
+            result -> Optional.ofNullable(result.components),
             (type, count, id, extraDataOpt, nbtOpt) -> {
                 RawGunTableResult result = new RawGunTableResult(type, id, count);
                 extraDataOpt.ifPresent(result::setExtraData);
-                nbtOpt.ifPresent(result::setNbt);
+                nbtOpt.ifPresent(result::setComponents);
                 return result;
             }
     );
@@ -71,9 +69,9 @@ public class RawGunTableResult {
     private final int count;
     private final ResourceLocation id;
     @Nullable
-    private GunResult extraData;
+    private GunResult extraData = null;
     @Nullable
-    private CompoundTag nbt;
+    private DataComponentMap components = null;
 
     public RawGunTableResult(@NotNull String type, @NotNull ResourceLocation id, int count) {
         this.type = type;
@@ -85,8 +83,8 @@ public class RawGunTableResult {
         this.extraData = extraData;
     }
 
-    public void setNbt(@Nullable CompoundTag nbt) {
-        this.nbt = nbt;
+    public void setComponents(@Nullable DataComponentMap components) {
+        this.components = components;
     }
 
     public static GunSmithTableResult init(RawGunTableResult raw) {
@@ -97,32 +95,30 @@ public class RawGunTableResult {
             default -> new GunSmithTableResult(ItemStack.EMPTY, TabConfig.TAB_EMPTY);
         };
 
-        if (raw.nbt != null && !result.getResult().isEmpty()) {
-            CompoundTag itemTag = result.getResult().get(ModDataComponentTypes.DATA).getUnsafe();
-            for (String key : raw.nbt.getAllKeys()) {
-                Tag tag = raw.nbt.get(key);
-                if (tag != null) {
-                    itemTag.put(key, tag);
-                }
-            }
+        if (raw.components != null && !result.getResult().isEmpty()) {
+            DataComponentMap components = result.getResult().getComponents();
+            components.forEach(component ->{
+                component.applyTo((PatchedDataComponentMap) result.getResult().getComponents());
+            });
         }
         return result;
     }
 
     private GunSmithTableResult getGunStack() {
         int ammoCount;
-        EnumMap<AttachmentType, ResourceLocation> attachments;
+        EnumMap<AccessoryType, ResourceLocation> attachments;
         if (extraData != null) {
             ammoCount = Math.max(0, extraData.getAmmoCount());
             attachments = extraData.getAttachments();
         } else {
             ammoCount = 0;
-            attachments = new EnumMap<>(AttachmentType.class);
+            attachments = new EnumMap<>(AccessoryType.class);
         }
 
         return TimelessAPI.getCommonGunIndex(id).map(gunIndex -> {
             ItemStack itemStack = GunItemBuilder.create()
-                    .setCount(count)
+                    // TODO 占位检查
+                    .setCount(1)
                     .setId(id)
                     .setAmmoCount(ammoCount)
                     .setAmmoInBarrel(false)
@@ -153,8 +149,8 @@ public class RawGunTableResult {
         }).orElse(new GunSmithTableResult(ItemStack.EMPTY, TabConfig.TAB_EMPTY));
     }
 
-    public @Nullable CompoundTag getNbt() {
-        return nbt;
+    public @Nullable DataComponentMap getComponents() {
+        return components;
     }
 
     public @Nullable GunResult getExtraData() {

@@ -6,8 +6,8 @@ import com.tacz.guns.api.entity.ReloadState;
 import com.tacz.guns.api.entity.ShootResult;
 import com.tacz.guns.entity.shooter.*;
 import com.tacz.guns.entity.sync.ModSyncedEntityData;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -100,7 +100,7 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator, 
         // 刷新当前武器
         this.tacz$data.currentGunItem = () -> tacz$shooter.getMainHandItem();
         // 刷新配件属性缓存
-        AttachmentPropertyManager.postChangeEvent(tacz$shooter, tacz$shooter.getMainHandItem());
+        AccessoryPropertyManager.postChangeEvent(tacz$shooter, tacz$shooter.getMainHandItem());
     }
 
     @Unique
@@ -173,13 +173,13 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator, 
     }
 
     @Override
-    public void updateCacheProperty(AttachmentCacheProperty cacheProperty) {
+    public void updateCacheProperty(AccessoryCacheProperty cacheProperty) {
         this.tacz$data.cacheProperty = cacheProperty;
     }
 
     @Override
     @Nullable
-    public AttachmentCacheProperty getCacheProperty() {
+    public AccessoryCacheProperty getCacheProperty() {
         return this.tacz$data.cacheProperty;
     }
 
@@ -209,7 +209,7 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator, 
         this.tacz$aim.zoom();
     }
 
-    @Inject(method = "tick", at = @At(value = "RETURN"))
+    @Inject(method = "tick", at = @At(value = "RETURN"),remap = false)
     private void onTickServerSide(CallbackInfo ci) {
         // 仅在服务端调用
         if (!level().isClientSide()) {

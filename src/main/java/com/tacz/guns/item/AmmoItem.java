@@ -14,6 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -61,6 +62,7 @@ public class AmmoItem extends Item implements AmmoItemDataAccessor {
         NonNullList<ItemStack> stacks = NonNullList.create();
         TimelessAPI.getAllCommonAmmoIndex().forEach(entry -> {
             ItemStack itemStack = AmmoItemBuilder.create().setId(entry.getKey()).build();
+            itemStack.set(DataComponents.ITEM_NAME,Component.translatable(entry.getValue().getPojo().getName()));
             stacks.add(itemStack);
         });
         return stacks;

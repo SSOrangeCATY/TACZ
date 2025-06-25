@@ -8,11 +8,11 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.client.model.bedrock.BedrockPart;
 import com.tacz.guns.client.resource.GunDisplayInstance;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.client.resource.pojo.display.LaserConfig;
 import com.tacz.guns.config.client.RenderConfig;
 import com.tacz.guns.util.LaserColorUtil;
@@ -63,9 +63,9 @@ public class BeamRenderer  {
             return DEFAULT_LASER_CONFIG;
         }
 
-        if (stack.getItem() instanceof IAttachment iAttachment) {
-            return TimelessAPI.getClientAttachmentIndex(iAttachment.getAttachmentId(stack))
-                    .map(ClientAttachmentIndex::getLaserConfig)
+        if (stack.getItem() instanceof IAccessory iAttachment) {
+            return TimelessAPI.getClientAttachmentIndex(iAttachment.getAccessoryId(stack))
+                    .map(ClientAccessoryIndex::getLaserConfig)
                     .orElse(DEFAULT_LASER_CONFIG);
         }
 

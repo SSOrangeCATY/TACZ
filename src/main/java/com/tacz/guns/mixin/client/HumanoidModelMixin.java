@@ -13,20 +13,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HumanoidModel.class)
 public class HumanoidModelMixin<T extends LivingEntity> {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart head;
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart body;
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart leftArm;
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart rightArm;
 
-    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At(value = "TAIL"))
+    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At(value = "TAIL"),remap = false)
     private void setRotationAnglesHead(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         InnerThirdPersonManager.setRotationAnglesHead(entityIn, rightArm, leftArm, body, head, limbSwingAmount);
     }

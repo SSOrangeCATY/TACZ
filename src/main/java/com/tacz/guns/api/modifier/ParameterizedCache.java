@@ -2,8 +2,8 @@ package com.tacz.guns.api.modifier;
 
 
 import com.google.common.collect.ImmutableList;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public class ParameterizedCache<T> {
             if (StringUtils.isEmpty(function)) {
                 continue;
             }
-            value = AttachmentPropertyManager.functionEval(value, input, function);
+            value = AccessoryPropertyManager.functionEval(value, input, function);
         }
         return value;
     }
@@ -64,7 +64,7 @@ public class ParameterizedCache<T> {
             if (StringUtils.isEmpty(function)) {
                 continue;
             }
-            value = AttachmentPropertyManager.functionEval(value, input, function);
+            value = AccessoryPropertyManager.functionEval(value, input, function);
         }
         return value;
     }

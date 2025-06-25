@@ -6,12 +6,12 @@ import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.client.resource.index.ClientAmmoIndex;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.client.resource.index.ClientBlockIndex;
 import com.tacz.guns.client.resource.index.ClientGunIndex;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import com.tacz.guns.resource.pojo.AmmoIndexPOJO;
-import com.tacz.guns.resource.pojo.AttachmentIndexPOJO;
+import com.tacz.guns.resource.pojo.AccessoryIndexPOJO;
 import com.tacz.guns.resource.pojo.BlockIndexPOJO;
 import com.tacz.guns.resource.pojo.GunIndexPOJO;
 import net.minecraft.client.Minecraft;
@@ -29,7 +29,7 @@ public class ClientIndexManager {
     public static final Map<ResourceLocation, GunDisplayInstance> GUN_DISPLAY = Maps.newHashMap();
     public static final Map<ResourceLocation, ClientGunIndex> GUN_INDEX = Maps.newHashMap();
     public static final Map<ResourceLocation, ClientAmmoIndex> AMMO_INDEX = Maps.newHashMap();
-    public static final Map<ResourceLocation, ClientAttachmentIndex> ATTACHMENT_INDEX = Maps.newHashMap();
+    public static final Map<ResourceLocation, ClientAccessoryIndex> ATTACHMENT_INDEX = Maps.newHashMap();
     public static final Map<ResourceLocation, ClientBlockIndex> BLOCK_INDEX = Maps.newHashMap();
 
     public static void reload() {
@@ -47,7 +47,7 @@ public class ClientIndexManager {
 
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && IGun.mainHandHoldGun(player)) {
-            AttachmentPropertyManager.postChangeEvent(player, player.getMainHandItem());
+            AccessoryPropertyManager.postChangeEvent(player, player.getMainHandItem());
 
             // 自动切一次枪，以便刷新状态机
             IClientPlayerGunOperator.fromLocalPlayer(player).draw(ItemStack.EMPTY);
@@ -91,9 +91,9 @@ public class ClientIndexManager {
     public static void loadAttachmentIndex() {
         TimelessAPI.getAllCommonAttachmentIndex().forEach(index -> {
             ResourceLocation id = index.getKey();
-            AttachmentIndexPOJO pojo = index.getValue().getPojo();
+            AccessoryIndexPOJO pojo = index.getValue().getPojo();
             try {
-                ATTACHMENT_INDEX.put(id, ClientAttachmentIndex.getInstance(id, pojo));
+                ATTACHMENT_INDEX.put(id, ClientAccessoryIndex.getInstance(id, pojo));
             } catch (IllegalArgumentException exception) {
                 GunMod.LOGGER.warn("{} index file read fail!", id, exception);
             }
@@ -120,7 +120,7 @@ public class ClientIndexManager {
         return AMMO_INDEX.entrySet();
     }
 
-    public static Set<Map.Entry<ResourceLocation, ClientAttachmentIndex>> getAllAttachments() {
+    public static Set<Map.Entry<ResourceLocation, ClientAccessoryIndex>> getAllAttachments() {
         return ATTACHMENT_INDEX.entrySet();
     }
 

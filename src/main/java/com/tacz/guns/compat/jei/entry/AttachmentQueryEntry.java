@@ -72,7 +72,7 @@ public class AttachmentQueryEntry {
                 if (!(gun.getItem() instanceof IGun iGun)) {
                     return;
                 }
-                if (iGun.allowAttachment(gun, this.attachmentStack)) {
+                if (iGun.allowAccessory(gun, this.attachmentStack)) {
                     this.allowGunStacks.add(gun);
                 }
             }

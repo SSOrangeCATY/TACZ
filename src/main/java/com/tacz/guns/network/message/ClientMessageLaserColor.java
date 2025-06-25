@@ -1,9 +1,9 @@
 package com.tacz.guns.network.message;
 
 import com.tacz.guns.GunMod;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -18,14 +18,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public record ClientMessageLaserColor(Map<AttachmentType, Integer> colorMap, boolean applyGunColor, int gunColor, int gunSlotIndex) implements CustomPacketPayload {
+public record ClientMessageLaserColor(Map<AccessoryType, Integer> colorMap, boolean applyGunColor, int gunColor, int gunSlotIndex) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ClientMessageLaserColor> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "client_player_laser_color"));
 
     public static final StreamCodec<ByteBuf, ClientMessageLaserColor> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.map(
                     (i)-> new HashMap<>(),
-                    AttachmentType.STREAM_CODEC,
+                    AccessoryType.STREAM_CODEC,
                     ByteBufCodecs.VAR_INT
                     ),
             ClientMessageLaserColor::colorMap,
@@ -39,15 +39,15 @@ public record ClientMessageLaserColor(Map<AttachmentType, Integer> colorMap, boo
     );
 
     public static ClientMessageLaserColor of(@NotNull ItemStack gun, int gunSlotIndex) {
-        final Map<AttachmentType, Integer> cm = new HashMap<>();
+        final Map<AccessoryType, Integer> cm = new HashMap<>();
         boolean agc = false;
         int gc = 0;
         int gsi = -1;
 
         if (gun.getItem() instanceof IGun iGun) {
-            for (AttachmentType type : AttachmentType.values()) {
-                ItemStack attachment = iGun.getAttachment(gun, type);
-                if (attachment.getItem() instanceof IAttachment iAttachment) {
+            for (AccessoryType type : AccessoryType.values()) {
+                ItemStack attachment = iGun.getAccessory(gun, type);
+                if (attachment.getItem() instanceof IAccessory iAttachment) {
                     if (iAttachment.hasCustomLaserColor(attachment)) {
                         cm.put(type, iAttachment.getLaserColor(attachment));
                     }
@@ -75,10 +75,10 @@ public record ClientMessageLaserColor(Map<AttachmentType, Integer> colorMap, boo
             IGun iGun = IGun.getIGunOrNull(gunItem);
             if (iGun != null) {
                 for (var entry : data.colorMap.entrySet()) {
-                    AttachmentType type = entry.getKey();
+                    AccessoryType type = entry.getKey();
                     int color = entry.getValue();
-                    ItemStack attachment = iGun.getAttachment(gunItem, type);
-                    if (attachment.getItem() instanceof IAttachment iAttachment) {
+                    ItemStack attachment = iGun.getAccessory(gunItem, type);
+                    if (attachment.getItem() instanceof IAccessory iAttachment) {
                         iAttachment.setLaserColor(attachment, color);
                     }
                 }

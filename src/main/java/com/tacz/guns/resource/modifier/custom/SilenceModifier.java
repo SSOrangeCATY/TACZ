@@ -8,8 +8,8 @@ import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.config.common.GunConfig;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.ChatFormatting;
@@ -59,8 +59,8 @@ public class SilenceModifier implements IAttachmentModifier<Pair<Modifier, Boole
             useSilenceSoundModifiers.add(v.right());
         });
         Pair<Integer, Boolean> cacheValue = cache.getValue();
-        double evalDistance = AttachmentPropertyManager.eval(distanceModifiers, cacheValue.left());
-        boolean useSilenceSound = AttachmentPropertyManager.eval(useSilenceSoundModifiers, cacheValue.right());
+        double evalDistance = AccessoryPropertyManager.eval(distanceModifiers, cacheValue.left());
+        boolean useSilenceSound = AccessoryPropertyManager.eval(useSilenceSoundModifiers, cacheValue.right());
         cache.setValue(Pair.of((int) Math.round(evalDistance), useSilenceSound));
     }
 
@@ -74,7 +74,7 @@ public class SilenceModifier implements IAttachmentModifier<Pair<Modifier, Boole
             Pair<Modifier, Boolean> value = this.getValue();
             if (value != null) {
                 int defaultDistance = GunConfig.DEFAULT_GUN_FIRE_SOUND_DISTANCE.get();
-                double eval = AttachmentPropertyManager.eval(value.left(), defaultDistance);
+                double eval = AccessoryPropertyManager.eval(value.left(), defaultDistance);
                 int distance = (int) Math.round(eval);
                 if (distance > defaultDistance) {
                     components.add(Component.translatable("tooltip.tacz.attachment.sound_distance.increase").withStyle(ChatFormatting.RED));

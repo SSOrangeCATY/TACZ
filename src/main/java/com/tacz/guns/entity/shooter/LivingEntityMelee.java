@@ -4,12 +4,12 @@ import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.event.common.GunMeleeEvent;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.event.ServerMessageGunMelee;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.pojo.data.attachment.MeleeData;
+import com.tacz.guns.resource.pojo.data.accessory.MeleeData;
 import com.tacz.guns.resource.pojo.data.gun.GunDefaultMeleeData;
 import com.tacz.guns.resource.pojo.data.gun.GunMeleeData;
 import net.minecraft.resources.ResourceLocation;
@@ -57,7 +57,7 @@ public class LivingEntityMelee {
         if (currentGunItem.getItem() instanceof AbstractGunItem logicGun) {
             data.meleeTimestamp = System.currentTimeMillis();
 
-            ResourceLocation muzzleId = logicGun.getAttachmentId(currentGunItem, AttachmentType.MUZZLE);
+            ResourceLocation muzzleId = logicGun.getAccessoryId(currentGunItem, AccessoryType.MUZZLE);
             MeleeData muzzleMeleeData = getMeleeData(muzzleId);
             if (muzzleMeleeData != null) {
                 float prepTime = muzzleMeleeData.getPrepTime();
@@ -65,7 +65,7 @@ public class LivingEntityMelee {
                 return;
             }
 
-            ResourceLocation stockId = logicGun.getAttachmentId(currentGunItem, AttachmentType.STOCK);
+            ResourceLocation stockId = logicGun.getAccessoryId(currentGunItem, AccessoryType.STOCK);
             MeleeData stockMeleeData = getMeleeData(stockId);
             if (stockMeleeData != null) {
                 float prepTime = stockMeleeData.getPrepTime();
@@ -115,14 +115,14 @@ public class LivingEntityMelee {
         return gunIndex.map(index -> {
             GunMeleeData meleeData = index.getGunData().getMeleeData();
             // 获取枪口，看看有没有近战数据
-            ResourceLocation muzzleId = iGun.getAttachmentId(currentGunItem, AttachmentType.MUZZLE);
+            ResourceLocation muzzleId = iGun.getAccessoryId(currentGunItem, AccessoryType.MUZZLE);
             MeleeData muzzleMeleeData = getMeleeData(muzzleId);
             if (muzzleMeleeData != null) {
                 return getTotalCooldownTime(meleeData, muzzleMeleeData.getCooldown());
             }
 
             // 枪托
-            ResourceLocation stockId = iGun.getAttachmentId(currentGunItem, AttachmentType.STOCK);
+            ResourceLocation stockId = iGun.getAccessoryId(currentGunItem, AccessoryType.STOCK);
             MeleeData stockMeleeData = getMeleeData(stockId);
             if (stockMeleeData != null) {
                 return getTotalCooldownTime(meleeData, stockMeleeData.getCooldown());

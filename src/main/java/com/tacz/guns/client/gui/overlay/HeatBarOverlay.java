@@ -48,8 +48,8 @@ public class HeatBarOverlay implements LayeredDraw.Layer {
             return;
         }
 
-        int width = mc.screen.width;
-        int height = mc.screen.height;
+        int width = mc.getWindow().getScreenWidth();
+        int height = mc.getWindow().getScreenHeight();
 
         PoseStack poseStack = graphics.pose();
         if(gunData.getHeatData() != null && iGun.hasHeatData(stack)) {

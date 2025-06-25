@@ -6,8 +6,10 @@ import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IAmmoBox;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
+import com.tacz.guns.api.item.component.AmmoComponents;
 import com.tacz.guns.api.item.nbt.AmmoBoxItemDataAccessor;
 import com.tacz.guns.config.sync.SyncConfig;
+import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.init.ModItems;
 import com.tacz.guns.inventory.tooltip.AmmoBoxTooltip;
 import net.minecraft.ChatFormatting;
@@ -26,6 +28,7 @@ import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -37,13 +40,9 @@ import java.util.Optional;
 
 public class AmmoBoxItem extends Item implements AmmoBoxItemDataAccessor {
     public static final ResourceLocation PROPERTY_NAME = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "ammo_statue");
-
     public static final int IRON_LEVEL = 0;
     public static final int GOLD_LEVEL = 1;
     public static final int DIAMOND_LEVEL = 2;
-
-    private static final String DISPLAY_TAG = "display";
-    private static final String COLOR_TAG = "color";
 
     private static final int OPEN = 0;
     private static final int CLOSE = 1;
@@ -52,7 +51,7 @@ public class AmmoBoxItem extends Item implements AmmoBoxItemDataAccessor {
     private static final int ALL_TYPE_CREATIVE_INDEX = 8;
 
     public AmmoBoxItem() {
-        super(new Properties().stacksTo(1));
+        super(new Properties().stacksTo(1).component(ModDataComponentTypes.DATA, CustomData.EMPTY));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -91,9 +90,8 @@ public class AmmoBoxItem extends Item implements AmmoBoxItemDataAccessor {
     }
 
     private static int getTagColor(ItemStack stack) {
-        if(stack.getItem() instanceof AmmoBoxItem iAmmoBox) {
-            CompoundTag compoundtag = (CompoundTag) iAmmoBox.getTag(stack).get(DISPLAY_TAG);
-            return compoundtag != null && compoundtag.contains(COLOR_TAG, Tag.TAG_ANY_NUMERIC) ? compoundtag.getInt(COLOR_TAG) : 0x727d6b;
+        if(stack.getItem() instanceof AmmoBoxItem) {
+            return stack.getOrDefault(AmmoComponents.AMMO_DISPLAY_COLOR,0x727d6b);
         }
         return 0x727d6b;
     }

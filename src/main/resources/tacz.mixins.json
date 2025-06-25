@@ -19,8 +19,7 @@
     "client.LanguageMixin",
     "client.LocalPlayerMixin",
     "client.MouseHandlerMixin",
-    "client.PlayerModelMixin",
-    "client.StairBlockAccessor"
+    "client.PlayerModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

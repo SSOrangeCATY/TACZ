@@ -6,7 +6,7 @@ import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.event.common.GunFireEvent;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IAmmoBox;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.util.LuaEntityAccessor;
@@ -19,13 +19,13 @@ import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.event.ServerMessageGunFire;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import com.tacz.guns.resource.modifier.custom.AmmoSpeedModifier;
 import com.tacz.guns.resource.modifier.custom.InaccuracyModifier;
 import com.tacz.guns.resource.modifier.custom.SilenceModifier;
 import com.tacz.guns.resource.pojo.data.gun.*;
 import com.tacz.guns.sound.SoundManager;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import com.tacz.guns.util.CycleTaskHelper;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.resources.ResourceLocation;
@@ -83,7 +83,7 @@ public class ModernKineticGunScriptAPI {
         IGunOperator gunOperator = IGunOperator.fromLivingEntity(shooter);
 
         // 获取配件数据缓存
-        AttachmentCacheProperty cacheProperty = gunOperator.getCacheProperty();
+        AccessoryCacheProperty cacheProperty = gunOperator.getCacheProperty();
         if (cacheProperty == null) {
             return;
         }
@@ -384,7 +384,7 @@ public class ModernKineticGunScriptAPI {
      * @return 当前枪械需要的弹药数量
      */
     public int getNeededAmmoAmount() {
-        int maxAmmoCount = AttachmentDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
+        int maxAmmoCount = AccessoryDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
         int currentAmmoCount = abstractGunItem.getCurrentAmmoCount(itemStack);
         return maxAmmoCount - currentAmmoCount;
     }
@@ -404,7 +404,7 @@ public class ModernKineticGunScriptAPI {
      * @return 返回枪械弹匣的最大备弹数，不计算已在枪管中的弹药。
      */
     public int getMaxAmmoCount() {
-        return AttachmentDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
+        return AccessoryDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
     }
 
     /**
@@ -413,7 +413,7 @@ public class ModernKineticGunScriptAPI {
      * @return 扩容等级，范围 0 ~ 3。0 表示没有安装扩容弹匣，1 ~ 3 表示安装了扩容等级 1 ~ 3 的扩容弹匣
      */
     public int getMagExtentLevel() {
-        return AttachmentDataUtils.getMagExtendLevel(itemStack, gunIndex.getGunData());
+        return AccessoryDataUtils.getMagExtendLevel(itemStack, gunIndex.getGunData());
     }
 
     /**
@@ -475,7 +475,7 @@ public class ModernKineticGunScriptAPI {
         if (amount < 0) {
             return 0;
         }
-        int maxAmmoCount = AttachmentDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
+        int maxAmmoCount = AccessoryDataUtils.getAmmoCountWithAttachment(itemStack, gunIndex.getGunData());
         int currentAmmoCount = abstractGunItem.getCurrentAmmoCount(itemStack);
         int newAmmoCount = currentAmmoCount + amount;
         if (maxAmmoCount < newAmmoCount) {
@@ -590,8 +590,8 @@ public class ModernKineticGunScriptAPI {
      */
     public String getAttachment(String type) {
         try {
-            AttachmentType t = AttachmentType.valueOf(type);
-            return abstractGunItem.getAttachmentId(itemStack, t).toString();
+            AccessoryType t = AccessoryType.valueOf(type);
+            return abstractGunItem.getAccessoryId(itemStack, t).toString();
         } catch (IllegalArgumentException e) {
             return DefaultAssets.EMPTY_ATTACHMENT_ID.toString();
         }
@@ -763,7 +763,7 @@ public class ModernKineticGunScriptAPI {
         gunIndex = gunIndexOptional.orElse(null);
         abstractGunItem = gunItem;
         if (itemStack.has(ModDataComponentTypes.DATA)) {
-            nbtUtil = new LuaNbtAccessor(itemStack.get(ModDataComponentTypes.DATA).getUnsafe());
+            nbtUtil = new LuaNbtAccessor(itemStack.get(ModDataComponentTypes.DATA));
         }
     }
 

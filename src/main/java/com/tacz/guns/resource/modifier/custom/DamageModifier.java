@@ -10,9 +10,9 @@ import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.config.sync.SyncConfig;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.BulletData;
 import com.tacz.guns.resource.pojo.data.gun.ExtraDamage;
 import com.tacz.guns.resource.pojo.data.gun.ExtraDamage.DistanceDamagePair;
@@ -79,7 +79,7 @@ public class DamageModifier implements IAttachmentModifier<Modifier, LinkedList<
         LinkedList<DistanceDamagePair> modifiedValue = new LinkedList<>();
         for (DistanceDamagePair pair : cacheValue) {
             float base = pair.getDamage();
-            float eval = (float) AttachmentPropertyManager.eval(modifiers, base);
+            float eval = (float) AccessoryPropertyManager.eval(modifiers, base);
             modifiedValue.add(new DistanceDamagePair(pair.getDistance(), eval));
         }
         cache.setValue(modifiedValue);
@@ -87,7 +87,7 @@ public class DamageModifier implements IAttachmentModifier<Modifier, LinkedList<
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         // 必要数据获取
         LinkedList<DistanceDamagePair> damagePairModifier = cacheProperty.getCache(DamageModifier.ID);
         IGun iGun = Objects.requireNonNull(IGun.getIGunOrNull(gunItem));
@@ -139,7 +139,7 @@ public class DamageModifier implements IAttachmentModifier<Modifier, LinkedList<
         public void initComponents() {
             Modifier value = getValue();
             if (value != null) {
-                double eval = AttachmentPropertyManager.eval(value, 9);
+                double eval = AccessoryPropertyManager.eval(value, 9);
                 int damage = (int) Math.round(eval);
                 if (damage > 9) {
                     components.add(Component.translatable("tooltip.tacz.attachment.damage.increase").withStyle(ChatFormatting.GREEN));

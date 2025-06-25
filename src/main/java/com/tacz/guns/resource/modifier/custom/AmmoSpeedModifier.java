@@ -8,9 +8,9 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.GunFireModeAdjustData;
 import net.minecraft.ChatFormatting;
@@ -52,13 +52,13 @@ public class AmmoSpeedModifier implements IAttachmentModifier<Modifier, Float> {
 
     @Override
     public void eval(List<Modifier> modifiers, CacheValue<Float> cache) {
-        double eval = AttachmentPropertyManager.eval(modifiers, cache.getValue());
+        double eval = AccessoryPropertyManager.eval(modifiers, cache.getValue());
         cache.setValue((float) eval);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         IGun iGun = Objects.requireNonNull(IGun.getIGunOrNull(gunItem));
         FireMode fireMode = iGun.getFireMode(gunItem);
         GunFireModeAdjustData fireModeAdjustData = gunData.getFireModeAdjustData(fireMode);
@@ -97,7 +97,7 @@ public class AmmoSpeedModifier implements IAttachmentModifier<Modifier, Float> {
         public void initComponents() {
             Modifier ammoSpeed = this.getValue();
             if (ammoSpeed != null) {
-                double eval = AttachmentPropertyManager.eval(ammoSpeed, 300);
+                double eval = AccessoryPropertyManager.eval(ammoSpeed, 300);
                 if (eval > 300) {
                     components.add(Component.translatable("tooltip.tacz.attachment.ammo_speed.increase").withStyle(ChatFormatting.GREEN));
                 } else if (eval < 300) {

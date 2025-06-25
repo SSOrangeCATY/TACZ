@@ -4,7 +4,6 @@ import com.tacz.guns.GunMod;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.entity.shooter.ShooterDataHolder;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -37,5 +36,10 @@ public class ClientMessageSyncBaseTimestamp implements CustomPacketPayload {
     @Override
     public @NotNull CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return TYPE;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ClientMessageSyncBaseTimestamp;
     }
 }

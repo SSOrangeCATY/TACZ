@@ -28,4 +28,9 @@ public class ClientMessagePlayerMelee implements CustomPacketPayload {
     public @NotNull CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ClientMessagePlayerMelee;
+    }
 }

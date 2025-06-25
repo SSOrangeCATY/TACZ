@@ -5,7 +5,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.tacz.guns.resource.index.CommonAttachmentIndex;
-import com.tacz.guns.resource.pojo.AttachmentIndexPOJO;
+import com.tacz.guns.resource.pojo.AccessoryIndexPOJO;
 
 import java.lang.reflect.Type;
 
@@ -13,7 +13,7 @@ public class CommonAttachmentIndexSerializer implements JsonDeserializer<CommonA
     @Override
     public CommonAttachmentIndex deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         try {
-            AttachmentIndexPOJO pojo = context.deserialize(json, AttachmentIndexPOJO.class);
+            AccessoryIndexPOJO pojo = context.deserialize(json, AccessoryIndexPOJO.class);
             return CommonAttachmentIndex.getInstance(pojo);
         } catch (IllegalArgumentException e) {
             throw new JsonParseException(e.getMessage());

@@ -1,8 +1,8 @@
 package com.tacz.guns.client.gui.components.refit;
 
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.util.LaserColorUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,12 +16,12 @@ public class HSVSliderGroup {
     private final Inventory inventory;
     private final int gunItemIndex;
 
-    private final AttachmentType type;
+    private final AccessoryType type;
 
     private final LaserColorSlider hueSlider;
     private final LaserColorSlider saturationSlider;
 
-    public HSVSliderGroup(int x, int y, int width, int height, Inventory inventory, int gunItemIndex, @NotNull AttachmentType type) {
+    public HSVSliderGroup(int x, int y, int width, int height, Inventory inventory, int gunItemIndex, @NotNull AccessoryType type) {
         this.inventory = inventory;
         this.gunItemIndex = gunItemIndex;
         this.type = type;
@@ -51,13 +51,13 @@ public class HSVSliderGroup {
         if (gun.getItem() instanceof IGun iGun) {
             int rgb_new = Color.HSBtoRGB((float) hueSlider.getValue(), (float) saturationSlider.getValue(), 1f);
 
-            if (type == AttachmentType.NONE) {
+            if (type == AccessoryType.NONE) {
                 iGun.setLaserColor(gun, rgb_new);
                 return;
             }
 
-            ItemStack laser = iGun.getAttachment(gun, type);
-            if (laser.getItem() instanceof IAttachment iAttachment) {
+            ItemStack laser = iGun.getAccessory(gun, type);
+            if (laser.getItem() instanceof IAccessory iAttachment) {
                 iAttachment.setLaserColor(laser, rgb_new);
             }
         }
@@ -65,17 +65,17 @@ public class HSVSliderGroup {
 
 
 
-    private int getColor(AttachmentType type) {
+    private int getColor(AccessoryType type) {
         if (inventory == null) {
             return 0XFF0000;
         }
         ItemStack gun = inventory.getItem(gunItemIndex);
 
         if (gun.getItem() instanceof IGun iGun) {
-            if (type == AttachmentType.NONE) {
+            if (type == AccessoryType.NONE) {
                 return LaserColorUtil.getLaserColor(gun);
             } else {
-                ItemStack attachment = iGun.getAttachment(gun, type);
+                ItemStack attachment = iGun.getAccessory(gun, type);
                 return LaserColorUtil.getLaserColor(attachment);
             }
         }

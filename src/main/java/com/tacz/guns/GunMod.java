@@ -1,5 +1,6 @@
 package com.tacz.guns;
 
+import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.resource.ResourceManager;
 import com.tacz.guns.config.ClientConfig;
 import com.tacz.guns.config.CommonConfig;
@@ -7,7 +8,7 @@ import com.tacz.guns.config.PreLoadConfig;
 import com.tacz.guns.config.ServerConfig;
 import com.tacz.guns.init.*;
 import com.tacz.guns.resource.GunPackLoader;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import net.minecraft.server.packs.PackType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -40,6 +41,8 @@ public class GunMod {
         ModCreativeTabs.TABS.register(bus);
         ModItems.ITEMS.register(bus);
         ModEntities.ENTITY_TYPES.register(bus);
+        ModDataComponentTypes.COMPONENT_TYPES.register(bus);
+        ModAttachmentTypes.ATTACHMENT_TYPES.register(bus);
         ModRecipe.RECIPE_SERIALIZERS.register(bus);
         ModRecipe.RECIPE_TYPES.register(bus);
         ModContainers.CONTAINER_TYPE.register(bus);
@@ -52,7 +55,7 @@ public class GunMod {
         }
 
         registerDefaultExtraGunPack();
-        AttachmentPropertyManager.registerModifier();
+        AccessoryPropertyManager.registerModifier();
     }
 
     private static void registerDefaultExtraGunPack() {

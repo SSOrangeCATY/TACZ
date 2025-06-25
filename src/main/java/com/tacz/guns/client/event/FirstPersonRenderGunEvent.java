@@ -10,15 +10,15 @@ import com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator;
 import com.tacz.guns.api.client.other.KeepingItemRenderer;
 import com.tacz.guns.api.event.common.GunFireEvent;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
-import com.tacz.guns.api.item.nbt.AttachmentItemDataAccessor;
+import com.tacz.guns.api.item.accessory.AccessoryType;
+import com.tacz.guns.api.item.nbt.AccessoryItemDataAccessor;
 import com.tacz.guns.client.animation.screen.RefitTransform;
 import com.tacz.guns.client.model.BedrockAttachmentModel;
 import com.tacz.guns.client.model.BedrockGunModel;
 import com.tacz.guns.client.model.bedrock.BedrockPart;
 import com.tacz.guns.client.model.functional.MuzzleFlashRender;
 import com.tacz.guns.client.renderer.item.GunItemRendererWrapper;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.entity.EntityKineticBullet;
 import com.tacz.guns.util.math.Easing;
 import com.tacz.guns.util.math.MathUtil;
@@ -26,7 +26,6 @@ import com.tacz.guns.util.math.PerlinNoise;
 import com.tacz.guns.util.math.SecondOrderDynamics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -146,12 +145,12 @@ public class FirstPersonRenderGunEvent {
         // 应用瞄准定位
         List<BedrockPart> idleNodePath = model.getIdleSightPath();
         List<BedrockPart> aimingNodePath = null;
-        ResourceLocation scopeId = iGun.getAttachmentId(stack, AttachmentType.SCOPE);
+        ResourceLocation scopeId = iGun.getAccessoryId(stack, AccessoryType.SCOPE);
         if (scopeId.equals(DefaultAssets.EMPTY_ATTACHMENT_ID)) {
-            scopeId = iGun.getBuiltInAttachmentId(stack, AttachmentType.SCOPE);
+            scopeId = iGun.getBuiltInAccessoryId(stack, AccessoryType.SCOPE);
         }
-        CompoundTag scopeTag = iGun.getAttachmentTag(stack, AttachmentType.SCOPE);
-        int zoomNumber = AttachmentItemDataAccessor.getZoomNumberFromTag(scopeTag);
+        ItemStack scope = iGun.getAccessory(stack, AccessoryType.SCOPE);
+        int zoomNumber = AccessoryItemDataAccessor.getZoomNumberFromItemStack(scope);
         int viewIndex = 1;
         if (DefaultAssets.isEmptyAttachmentId(scopeId)) {
             // 未安装瞄具，使用机瞄定位组
@@ -161,7 +160,7 @@ public class FirstPersonRenderGunEvent {
             List<BedrockPart> scopeNodePath = model.getScopePosPath();
             if (scopeNodePath != null) {
                 aimingNodePath = new ArrayList<>(scopeNodePath);
-                Optional<ClientAttachmentIndex> indexOptional = TimelessAPI.getClientAttachmentIndex(scopeId);
+                Optional<ClientAccessoryIndex> indexOptional = TimelessAPI.getClientAttachmentIndex(scopeId);
                 if (indexOptional.isPresent()) {
                     BedrockAttachmentModel attachmentModel = indexOptional.get().getAttachmentModel();
                     int[] views = indexOptional.get().getViews();
@@ -197,8 +196,8 @@ public class FirstPersonRenderGunEvent {
         MathUtil.applyMatrixLerp(transformMatrix, aimingViewMatrix, transformMatrix, (1 - refitScreenOpeningProgress) * aimingProgress);
         // 应用改装界面开启时的定位
         float refitTransformProgress = (float) Easing.easeOutCubic(RefitTransform.getTransformProgress());
-        AttachmentType oldType = RefitTransform.getOldTransformType();
-        AttachmentType currentType = RefitTransform.getCurrentTransformType();
+        AccessoryType oldType = RefitTransform.getOldTransformType();
+        AccessoryType currentType = RefitTransform.getCurrentTransformType();
         List<BedrockPart> fromNode = model.getRefitAttachmentViewPath(oldType);
         List<BedrockPart> toNode = model.getRefitAttachmentViewPath(currentType);
         MathUtil.applyMatrixLerp(transformMatrix, getPositioningNodeInverse(fromNode), transformMatrix, refitScreenOpeningProgress);

@@ -4,6 +4,7 @@ import com.tacz.guns.GunMod;
 import com.tacz.guns.api.item.gun.GunItemManager;
 import com.tacz.guns.item.*;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 
@@ -37,7 +38,7 @@ public class ModItems {
 
     @SubscribeEvent
     public static void onItemRegister(RegisterEvent event) {
-        if (event.getRegistryKey().equals(Registries.ITEM.registryKey())) {
+        if (event.getRegistryKey().location().equals(ResourceLocation.withDefaultNamespace("item"))) {
             GunItemManager.registerGunItem(ModernKineticGunItem.TYPE_NAME, MODERN_KINETIC_GUN);
         }
     }

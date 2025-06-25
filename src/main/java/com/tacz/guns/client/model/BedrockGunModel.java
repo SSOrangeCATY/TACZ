@@ -7,14 +7,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.client.animation.AnimationListener;
 import com.tacz.guns.api.client.animation.ObjectAnimationChannel;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.model.bedrock.BedrockPart;
 import com.tacz.guns.client.model.bedrock.ModelRendererWrapper;
 import com.tacz.guns.client.model.functional.*;
 import com.tacz.guns.client.model.listener.model.ModelAdditionalMagazineListener;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.client.resource.pojo.display.gun.TextShow;
 import com.tacz.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tacz.guns.client.resource.pojo.model.BedrockVersion;
@@ -34,8 +34,8 @@ import java.util.function.Predicate;
 import static com.tacz.guns.client.model.GunModelConstant.*;
 
 public class BedrockGunModel extends BedrockAnimatedModel {
-    protected final EnumMap<AttachmentType, List<BedrockPart>> refitAttachmentViewPath = Maps.newEnumMap(AttachmentType.class);
-    private final EnumMap<AttachmentType, ItemStack> currentAttachmentItem = Maps.newEnumMap(AttachmentType.class);
+    protected final EnumMap<AccessoryType, List<BedrockPart>> refitAttachmentViewPath = Maps.newEnumMap(AccessoryType.class);
+    private final EnumMap<AccessoryType, ItemStack> currentAttachmentItem = Maps.newEnumMap(AccessoryType.class);
     private final Set<String> adapterToRender = Sets.newHashSet();
     private final ArrayList<ShellRender> shellRenderList = new ArrayList<>();
 
@@ -124,14 +124,14 @@ public class BedrockGunModel extends BedrockAnimatedModel {
         fixedOriginPath = getPath(modelMap.get(FIXED_ORIGIN_NODE));
         groundOriginPath = getPath(modelMap.get(GROUND_ORIGIN_NODE));
         muzzleFlashPosPath = getPath(modelMap.get(MUZZLE_FLASH_ORIGIN_NODE));
-        scopePosPath = getPath(modelMap.get(AttachmentType.SCOPE.name().toLowerCase() + ATTACHMENT_POS_SUFFIX));
+        scopePosPath = getPath(modelMap.get(AccessoryType.SCOPE.name().toLowerCase() + ATTACHMENT_POS_SUFFIX));
         laserBeamPaths = getPath(modelMap.get("laser_beam"));
         root = Optional.ofNullable(modelMap.get(ROOT_NODE)).map(ModelRendererWrapper::getModelRenderer).orElse(null);
     }
 
     private void cacheRefitAttachmentViewPath() {
-        for (AttachmentType type : AttachmentType.values()) {
-            if (type == AttachmentType.NONE) {
+        for (AccessoryType type : AccessoryType.values()) {
+            if (type == AccessoryType.NONE) {
                 refitAttachmentViewPath.put(type, getPath(modelMap.get(REFIT_VIEW_NODE)));
                 continue;
             }
@@ -165,9 +165,9 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     }
 
     private void allAttachmentRender() {
-        for (AttachmentType type : AttachmentType.values()) {
+        for (AccessoryType type : AccessoryType.values()) {
             // 瞄具的渲染需要提前
-            if (type == AttachmentType.NONE || type == AttachmentType.SCOPE) {
+            if (type == AccessoryType.NONE || type == AccessoryType.SCOPE) {
                 continue;
             }
             String positionNodeName = type.name().toLowerCase() + ATTACHMENT_POS_SUFFIX;
@@ -178,7 +178,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
             });
             this.setFunctionalRenderer(defaultNodeName, bedrockPart -> {
                 ItemStack attachmentItem = currentAttachmentItem.get(type);
-                if (type == AttachmentType.MUZZLE && checkShowMuzzle(bedrockPart, attachmentItem)) {
+                if (type == AccessoryType.MUZZLE && checkShowMuzzle(bedrockPart, attachmentItem)) {
                     return null;
                 }
                 bedrockPart.visible = attachmentItem == null || attachmentItem.isEmpty();
@@ -188,9 +188,9 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     }
 
     private static boolean checkShowMuzzle(BedrockPart bedrockPart, ItemStack attachmentItem) {
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachmentItem);
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachmentItem);
         if (iAttachment != null) {
-            ResourceLocation attachmentId = iAttachment.getAttachmentId(attachmentItem);
+            ResourceLocation attachmentId = iAttachment.getAccessoryId(attachmentItem);
             var attachmentIndex = TimelessAPI.getClientAttachmentIndex(attachmentId);
             if (attachmentIndex.isPresent()) {
                 bedrockPart.visible = attachmentIndex.get().isShowMuzzle();
@@ -202,16 +202,16 @@ public class BedrockGunModel extends BedrockAnimatedModel {
 
     @Nullable
     private IFunctionalRenderer handguardTacticalRender(BedrockPart bedrockPart) {
-        ItemStack laserItem = currentAttachmentItem.get(AttachmentType.LASER);
-        ItemStack gripItem = currentAttachmentItem.get(AttachmentType.GRIP);
+        ItemStack laserItem = currentAttachmentItem.get(AccessoryType.LASER);
+        ItemStack gripItem = currentAttachmentItem.get(AccessoryType.GRIP);
         bedrockPart.visible = !laserItem.isEmpty() || !gripItem.isEmpty();
         return null;
     }
 
     @Nullable
     private IFunctionalRenderer handguardDefaultRender(BedrockPart bedrockPart) {
-        ItemStack laserItem = currentAttachmentItem.get(AttachmentType.LASER);
-        ItemStack gripItem = currentAttachmentItem.get(AttachmentType.GRIP);
+        ItemStack laserItem = currentAttachmentItem.get(AccessoryType.LASER);
+        ItemStack gripItem = currentAttachmentItem.get(AccessoryType.GRIP);
         bedrockPart.visible = laserItem.isEmpty() && gripItem.isEmpty();
         return null;
     }
@@ -250,20 +250,20 @@ public class BedrockGunModel extends BedrockAnimatedModel {
         currentExtendMagLevel = 0;
         adapterToRender.clear();
         // 更新配件物品的缓存，以供渲染使用
-        for (AttachmentType type : AttachmentType.values()) {
-            if (type == AttachmentType.NONE) {
+        for (AccessoryType type : AccessoryType.values()) {
+            if (type == AccessoryType.NONE) {
                 continue;
             }
-            ItemStack attachmentItem = iGun.getAttachment(gunItem, type);
+            ItemStack attachmentItem = iGun.getAccessory(gunItem, type);
             if (attachmentItem.isEmpty()) {
-                attachmentItem = iGun.getBuiltinAttachment(gunItem, type);
+                attachmentItem = iGun.getBuiltinAccessory(gunItem, type);
             }
             currentAttachmentItem.put(type, attachmentItem);
-            IAttachment attachment = IAttachment.getIAttachmentOrNull(attachmentItem);
+            IAccessory attachment = IAccessory.getIAttachmentOrNull(attachmentItem);
             if (attachment != null) {
-                TimelessAPI.getClientAttachmentIndex(attachment.getAttachmentId(attachmentItem)).ifPresent(index -> {
+                TimelessAPI.getClientAttachmentIndex(attachment.getAccessoryId(attachmentItem)).ifPresent(index -> {
                     // 读取扩容等级，为扩容弹匣渲染做准备
-                    if (type == AttachmentType.EXTENDED_MAG) {
+                    if (type == AccessoryType.EXTENDED_MAG) {
                         currentExtendMagLevel = index.getData().getExtendedMagLevel();
                     }
                     // 添加需要渲染的转接口
@@ -277,8 +277,8 @@ public class BedrockGunModel extends BedrockAnimatedModel {
             BeamRenderer.renderLaserBeam(gunItem, matrixStack, transformType, laserBeamPaths);
         }
         // 镜子需要先渲染，写入模板值
-        ItemStack attachmentItem = currentAttachmentItem.get(AttachmentType.SCOPE);
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachmentItem);
+        ItemStack attachmentItem = currentAttachmentItem.get(AccessoryType.SCOPE);
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachmentItem);
         if (scopePosPath != null && attachmentItem != null && !attachmentItem.isEmpty()) {
             matrixStack.pushPose();
             for (BedrockPart bedrockPart : scopePosPath) {
@@ -288,7 +288,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
             matrixStack.popPose();
             // 开启模板测试，因为镜内不渲染枪体
             if (iAttachment != null) {
-                Optional<ClientAttachmentIndex> attachmentIndex = TimelessAPI.getClientAttachmentIndex(iAttachment.getAttachmentId(attachmentItem));
+                Optional<ClientAccessoryIndex> attachmentIndex = TimelessAPI.getClientAttachmentIndex(iAttachment.getAccessoryId(attachmentItem));
                 attachmentIndex.ifPresent(index -> {
                     if (index.isScope() && index.isSight()) { // 组合镜
                         RenderHelper.enableItemEntityStencilTest();
@@ -319,7 +319,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     @Nullable
     private IFunctionalRenderer scopeHiddenRender(BedrockPart bedrockPart, Predicate<ItemStack> predicate) {
         // 安装瞄具时可见
-        ItemStack scopeItem = currentAttachmentItem.get(AttachmentType.SCOPE);
+        ItemStack scopeItem = currentAttachmentItem.get(AccessoryType.SCOPE);
         bedrockPart.visible = predicate.test(scopeItem);
         return null;
     }
@@ -351,7 +351,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
         }
     }
 
-    public EnumMap<AttachmentType, ItemStack> getCurrentAttachmentItem() {
+    public EnumMap<AccessoryType, ItemStack> getCurrentAttachmentItem() {
         return currentAttachmentItem;
     }
 
@@ -400,7 +400,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     }
 
     @Nullable
-    public List<BedrockPart> getRefitAttachmentViewPath(AttachmentType type) {
+    public List<BedrockPart> getRefitAttachmentViewPath(AccessoryType type) {
         return refitAttachmentViewPath.get(type);
     }
 

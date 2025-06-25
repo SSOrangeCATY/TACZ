@@ -8,7 +8,7 @@ import com.tacz.guns.api.entity.ReloadState;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IAmmoBox;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.util.LuaNbtAccessor;
 import com.tacz.guns.client.model.BedrockGunModel;
@@ -18,7 +18,7 @@ import com.tacz.guns.client.resource.index.ClientGunIndex;
 import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.pojo.data.gun.Bolt;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
@@ -158,7 +158,7 @@ public class GunAnimationStateContext extends ItemAnimationStateContext {
     public int getMaxAmmoCount() {
         return processGunData(
                 (iGun, gunIndex) ->
-                        AttachmentDataUtils.getAmmoCountWithAttachment(currentGunItem, gunData)
+                        AccessoryDataUtils.getAmmoCountWithAttachment(currentGunItem, gunData)
         ).orElse(0);
     }
 
@@ -199,7 +199,7 @@ public class GunAnimationStateContext extends ItemAnimationStateContext {
     public int getMagExtentLevel() {
         return processGunData(
                 (iGun, gunIndex) ->
-                        AttachmentDataUtils.getMagExtendLevel(currentGunItem, gunData)
+                        AccessoryDataUtils.getMagExtendLevel(currentGunItem, gunData)
         ).orElse(0);
     }
 
@@ -395,8 +395,8 @@ public class GunAnimationStateContext extends ItemAnimationStateContext {
      */
     public String getAttachment(String type) {
         try {
-            AttachmentType t = AttachmentType.valueOf(type);
-            return iGun.getAttachmentId(currentGunItem, t).toString();
+            AccessoryType t = AccessoryType.valueOf(type);
+            return iGun.getAccessoryId(currentGunItem, t).toString();
         } catch (IllegalArgumentException e) {
             return DefaultAssets.EMPTY_ATTACHMENT_ID.toString();
         }

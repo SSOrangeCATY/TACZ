@@ -5,11 +5,11 @@ import com.google.common.collect.Maps;
 import com.google.gson.annotations.SerializedName;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.FireMode;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import com.tacz.guns.resource.modifier.custom.RpmModifier;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -103,16 +103,16 @@ public class GunData {
     private GunHeatData gunHeatData = null;
 
     @SerializedName("allow_attachment_types")
-    private List<AttachmentType> allowAttachments = Lists.newArrayList();
+    private List<AccessoryType> allowAttachments = Lists.newArrayList();
 
     @SerializedName("exclusive_attachments")
-    private Map<ResourceLocation, AttachmentData> exclusiveAttachments = Maps.newHashMap();
+    private Map<ResourceLocation, AccessoryData> exclusiveAttachments = Maps.newHashMap();
 
     @SerializedName("weight")
     private float weight = 0f;
 
     @SerializedName("builtin_attachments")
-    private Map<AttachmentType, ResourceLocation> builtInAttachments = Maps.newHashMap();
+    private Map<AccessoryType, ResourceLocation> builtInAttachments = Maps.newHashMap();
 
     @SerializedName("script")
     private ResourceLocation script = null;
@@ -264,15 +264,15 @@ public class GunData {
     }
 
     @Nullable
-    public List<AttachmentType> getAllowAttachments() {
+    public List<AccessoryType> getAllowAttachments() {
         return allowAttachments;
     }
 
-    public Map<AttachmentType, ResourceLocation> getBuiltInAttachments() {
+    public Map<AccessoryType, ResourceLocation> getBuiltInAccessories() {
         return builtInAttachments;
     }
 
-    public Map<ResourceLocation, AttachmentData> getExclusiveAttachments() {
+    public Map<ResourceLocation, AccessoryData> getExclusiveAccessories() {
         return exclusiveAttachments;
     }
 
@@ -291,7 +291,7 @@ public class GunData {
      */
     public long getShootInterval(LivingEntity shooter, FireMode fireMode, ItemStack gunStack) {
         int rpm = this.getRoundsPerMinute(fireMode);
-        AttachmentCacheProperty cacheProperty = IGunOperator.fromLivingEntity(shooter).getCacheProperty();
+        AccessoryCacheProperty cacheProperty = IGunOperator.fromLivingEntity(shooter).getCacheProperty();
         if (cacheProperty != null) {
             rpm = Mth.clamp(cacheProperty.<Integer>getCache(RpmModifier.ID), 1, 1200);
         }

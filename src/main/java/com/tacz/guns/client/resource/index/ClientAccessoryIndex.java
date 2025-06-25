@@ -11,8 +11,8 @@ import com.tacz.guns.client.resource.pojo.display.gun.TextShow;
 import com.tacz.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tacz.guns.client.resource.pojo.model.BedrockVersion;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.pojo.AttachmentIndexPOJO;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.pojo.AccessoryIndexPOJO;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import com.tacz.guns.util.ColorHex;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
@@ -24,14 +24,14 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 
-public class ClientAttachmentIndex {
+public class ClientAccessoryIndex {
     private final Map<ResourceLocation, ClientAttachmentSkinIndex> skinIndexMap = Maps.newHashMap();
     private String name;
     private @Nullable BedrockAttachmentModel attachmentModel;
     private @Nullable ResourceLocation modelTexture;
     private @Nullable Pair<BedrockAttachmentModel, ResourceLocation> lodModel;
     private ResourceLocation slotTexture;
-    private AttachmentData data;
+    private AccessoryData data;
     private float[] viewsFov;
     private float @Nullable [] zoom;
     private int [] views;
@@ -43,11 +43,11 @@ public class ClientAttachmentIndex {
     private Map<String, ResourceLocation> sounds;
     private @Nullable LaserConfig laserConfig;
 
-    private ClientAttachmentIndex() {
+    private ClientAccessoryIndex() {
     }
 
-    public static ClientAttachmentIndex getInstance(ResourceLocation registryName, AttachmentIndexPOJO indexPOJO) throws IllegalArgumentException {
-        ClientAttachmentIndex index = new ClientAttachmentIndex();
+    public static ClientAccessoryIndex getInstance(ResourceLocation registryName, AccessoryIndexPOJO indexPOJO) throws IllegalArgumentException {
+        ClientAccessoryIndex index = new ClientAccessoryIndex();
         checkIndex(indexPOJO, index);
         AttachmentDisplay display = checkDisplay(indexPOJO, index);
         checkData(indexPOJO, index);
@@ -61,13 +61,13 @@ public class ClientAttachmentIndex {
         return index;
     }
 
-    private static void checkIndex(AttachmentIndexPOJO attachmentIndexPOJO, ClientAttachmentIndex index) {
+    private static void checkIndex(AccessoryIndexPOJO attachmentIndexPOJO, ClientAccessoryIndex index) {
         Preconditions.checkArgument(attachmentIndexPOJO != null, "index object file is empty");
         index.tooltipKey = attachmentIndexPOJO.getTooltip();
     }
 
     @Nonnull
-    private static AttachmentDisplay checkDisplay(AttachmentIndexPOJO indexPOJO, ClientAttachmentIndex index) {
+    private static AttachmentDisplay checkDisplay(AccessoryIndexPOJO indexPOJO, ClientAccessoryIndex index) {
         ResourceLocation pojoDisplay = indexPOJO.getDisplay();
         Preconditions.checkArgument(pojoDisplay != null, "index object missing display field");
         AttachmentDisplay display = ClientAssetsManager.INSTANCE.getAttachmentDisplay(pojoDisplay);
@@ -121,27 +121,27 @@ public class ClientAttachmentIndex {
         }
     }
 
-    private static void checkData(AttachmentIndexPOJO indexPOJO, ClientAttachmentIndex index) {
+    private static void checkData(AccessoryIndexPOJO indexPOJO, ClientAccessoryIndex index) {
         ResourceLocation dataId = indexPOJO.getData();
         Preconditions.checkArgument(dataId != null, "index object missing pojoData field");
-        AttachmentData data = CommonAssetsManager.get().getAttachmentData(dataId);
+        AccessoryData data = CommonAssetsManager.get().getAttachmentData(dataId);
         Preconditions.checkArgument(data != null, "there is no corresponding data file");
         // 剩下的不需要校验了，Common的读取逻辑中已经校验过了
         index.data = data;
     }
 
-    private static void checkName(AttachmentIndexPOJO indexPOJO, ClientAttachmentIndex index) {
+    private static void checkName(AccessoryIndexPOJO indexPOJO, ClientAccessoryIndex index) {
         index.name = indexPOJO.getName();
         if (StringUtils.isBlank(index.name)) {
             index.name = "custom.tacz.error.no_name";
         }
     }
 
-    private static void checkSlotTexture(AttachmentDisplay display, ClientAttachmentIndex index) {
+    private static void checkSlotTexture(AttachmentDisplay display, ClientAccessoryIndex index) {
         index.slotTexture = Objects.requireNonNullElseGet(display.getSlotTextureLocation(), MissingTextureAtlasSprite::getLocation);
     }
 
-    private static void checkTextureAndModel(AttachmentDisplay display, ClientAttachmentIndex index) {
+    private static void checkTextureAndModel(AttachmentDisplay display, ClientAccessoryIndex index) {
         // 不检查模型/材质是否为 null，模型/材质可以为 null
         index.attachmentModel = getOrLoadAttachmentModel(display.getModel());
         if (index.attachmentModel != null) {
@@ -177,7 +177,7 @@ public class ClientAttachmentIndex {
         return attachmentModel;
     }
 
-    private static void checkLod(AttachmentDisplay display, ClientAttachmentIndex index) {
+    private static void checkLod(AttachmentDisplay display, ClientAccessoryIndex index) {
         AttachmentLod gunLod = display.getAttachmentLod();
         if (gunLod != null) {
             ResourceLocation texture = gunLod.getModelTexture();
@@ -205,7 +205,7 @@ public class ClientAttachmentIndex {
     }
 
 
-    private static void checkSounds(AttachmentDisplay display, ClientAttachmentIndex index) {
+    private static void checkSounds(AttachmentDisplay display, ClientAccessoryIndex index) {
         Map<String, ResourceLocation> displaySounds = display.getSounds();
         if (displaySounds == null) {
             index.sounds = Maps.newHashMap();
@@ -254,7 +254,7 @@ public class ClientAttachmentIndex {
         return views;
     }
 
-    public AttachmentData getData() {
+    public AccessoryData getData() {
         return data;
     }
 

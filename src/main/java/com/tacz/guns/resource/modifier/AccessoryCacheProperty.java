@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.tacz.guns.api.GunProperty;
 import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import net.minecraft.world.item.ItemStack;
 
 
@@ -17,7 +17,7 @@ import static org.jetbrains.annotations.ApiStatus.*;
 /**
  * 所有与配件缓存计算相关的都在这里
  */
-public class AttachmentCacheProperty {
+public class AccessoryCacheProperty {
     @SuppressWarnings("rawtypes")
     private final Map<String, CacheValue> cacheValues = Maps.newHashMap();
     private final Map<String, List<?>> cacheModifiers = Maps.newHashMap();
@@ -25,14 +25,14 @@ public class AttachmentCacheProperty {
     @SuppressWarnings("all")
     public void eval(ItemStack gunItem, GunData gunData) {
         // 数值初始化
-        var modifiers = AttachmentPropertyManager.getModifiers();
+        var modifiers = AccessoryPropertyManager.getModifiers();
         modifiers.forEach((id, value) -> {
             cacheValues.put(id, value.initCache(gunItem, gunData));
             cacheModifiers.put(id, Lists.newArrayList());
         });
 
         // 逐个读取配件属性，写入 modifier
-        AttachmentDataUtils.getAllAttachmentData(gunItem, gunData, data -> {
+        AccessoryDataUtils.getAllAttachmentData(gunItem, gunData, data -> {
             data.getModifier().forEach((id, value) -> {
                 List objects = cacheModifiers.get(id);
                 objects.add(value.getValue());

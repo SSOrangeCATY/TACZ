@@ -10,6 +10,7 @@ import com.tacz.guns.inventory.tooltip.BlockItemTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -48,6 +49,7 @@ public class GunSmithTableItem extends BlockItem implements BlockItemDataAccesso
         NonNullList<ItemStack> stacks = NonNullList.create();
         TimelessAPI.getAllCommonBlockIndex().forEach((blockIndex) -> {
             ItemStack stack = BlockItemBuilder.create(blockIndex.getValue().getBlock()).setId(blockIndex.getKey()).build();
+            stack.set(DataComponents.ITEM_NAME,Component.translatable(blockIndex.getValue().getPojo().getName()));
             stacks.add(stack);
         });
         return stacks;

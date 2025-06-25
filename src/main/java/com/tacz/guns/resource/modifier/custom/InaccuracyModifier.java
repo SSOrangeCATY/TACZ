@@ -10,9 +10,9 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.GunFireModeAdjustData;
 import com.tacz.guns.resource.pojo.data.gun.InaccuracyType;
@@ -114,7 +114,7 @@ public class InaccuracyModifier implements IAttachmentModifier<Map<InaccuracyTyp
         }
         // 一次性把配件的数据计算完
         cache.getValue().forEach((type, value) -> {
-            double eval = AttachmentPropertyManager.eval(tmpModified.get(type), cache.getValue().get(type));
+            double eval = AccessoryPropertyManager.eval(tmpModified.get(type), cache.getValue().get(type));
             result.put(type, (float) eval);
         });
         // 写入缓存
@@ -123,7 +123,7 @@ public class InaccuracyModifier implements IAttachmentModifier<Map<InaccuracyTyp
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         IGun iGun = Objects.requireNonNull(IGun.getIGunOrNull(gunItem));
         FireMode fireMode = iGun.getFireMode(gunItem);
         GunFireModeAdjustData fireModeAdjustData = gunData.getFireModeAdjustData(fireMode);
@@ -136,7 +136,7 @@ public class InaccuracyModifier implements IAttachmentModifier<Map<InaccuracyTyp
         );
     }
 
-    private @NotNull DiagramsData buildNormal(GunData gunData, AttachmentCacheProperty cacheProperty, GunFireModeAdjustData fireModeAdjustData,
+    private @NotNull DiagramsData buildNormal(GunData gunData, AccessoryCacheProperty cacheProperty, GunFireModeAdjustData fireModeAdjustData,
                                               InaccuracyType type, String titleKey, double referenceValue) {
         // 腰射扩散
         float inaccuracy = gunData.getInaccuracy(type);
@@ -161,7 +161,7 @@ public class InaccuracyModifier implements IAttachmentModifier<Map<InaccuracyTyp
                 titleKey, positivelyString, negativelyString, defaultString, positivelyBetter);
     }
 
-    private @NotNull DiagramsData buildAim(GunData gunData, AttachmentCacheProperty cacheProperty, GunFireModeAdjustData fireModeAdjustData) {
+    private @NotNull DiagramsData buildAim(GunData gunData, AccessoryCacheProperty cacheProperty, GunFireModeAdjustData fireModeAdjustData) {
         float aimInaccuracy = gunData.getInaccuracy(InaccuracyType.AIM);
         if (fireModeAdjustData != null) {
             aimInaccuracy += fireModeAdjustData.getAimInaccuracy();
@@ -212,7 +212,7 @@ public class InaccuracyModifier implements IAttachmentModifier<Map<InaccuracyTyp
             float inaccuracyAddend = 0;
             if (value != null && value.containsKey(type)) {
                 // 随便传入个默认值进行测试，看看最终结果差值
-                double eval = AttachmentPropertyManager.eval(value.get(type), 5);
+                double eval = AccessoryPropertyManager.eval(value.get(type), 5);
                 inaccuracyAddend = (float) (eval - 5);
             }
             // 添加文本提示

@@ -13,8 +13,8 @@ import com.tacz.guns.resource.index.CommonAmmoIndex;
 import com.tacz.guns.resource.index.CommonAttachmentIndex;
 import com.tacz.guns.resource.index.CommonBlockIndex;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import com.tacz.guns.resource.pojo.data.block.BlockData;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.resources.ResourceLocation;
@@ -31,7 +31,7 @@ public enum CommonNetworkCache implements ICommonResourceProvider {
     INSTANCE;
 
     public Map<ResourceLocation, GunData> gunData = new HashMap<>();
-    public Map<ResourceLocation, AttachmentData> attachmentData = new HashMap<>();
+    public Map<ResourceLocation, AccessoryData> attachmentData = new HashMap<>();
     public Map<ResourceLocation, RecipeFilter> recipeFilter = new HashMap<>();
     public Map<ResourceLocation, BlockData> blockData = new HashMap<>();
     public Map<ResourceLocation, CommonGunIndex> gunIndex = new HashMap<>();
@@ -49,7 +49,7 @@ public enum CommonNetworkCache implements ICommonResourceProvider {
 
     @Nullable
     @Override
-    public AttachmentData getAttachmentData(ResourceLocation attachmentId) {
+    public AccessoryData getAttachmentData(ResourceLocation attachmentId) {
         return attachmentData.get(attachmentId);
     }
 
@@ -155,12 +155,12 @@ public enum CommonNetworkCache implements ICommonResourceProvider {
         return CommonAssetsManager.GSON.fromJson(json, dataClass);
     }
 
-    private AttachmentData parseAttachmentData(String json) {
-        AttachmentData data = CommonAssetsManager.GSON.fromJson(json, AttachmentData.class);
+    private AccessoryData parseAttachmentData(String json) {
+        AccessoryData data = CommonAssetsManager.GSON.fromJson(json, AccessoryData.class);
         JsonElement element = CommonAssetsManager.GSON.fromJson(json, JsonElement.class);
         if (data != null) {
             // 序列化注册的配件属性修改
-            AttachmentPropertyManager.getModifiers().forEach((key, value) -> {
+            AccessoryPropertyManager.getModifiers().forEach((key, value) -> {
                 if (!element.isJsonObject()) {
                     return;
                 }

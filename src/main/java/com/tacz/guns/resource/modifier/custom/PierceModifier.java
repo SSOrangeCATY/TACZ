@@ -6,9 +6,9 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -42,13 +42,13 @@ public class PierceModifier implements IAttachmentModifier<Modifier, Integer> {
 
     @Override
     public void eval(List<Modifier> modifiers, CacheValue<Integer> cache) {
-        double eval = AttachmentPropertyManager.eval(modifiers, cache.getValue());
+        double eval = AccessoryPropertyManager.eval(modifiers, cache.getValue());
         cache.setValue((int) Math.round(eval));
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         int pierce = gunData.getBulletData().getPierce();
         int modifiedValue = cacheProperty.<Integer>getCache(PierceModifier.ID);
         int pierceModifier = modifiedValue - pierce;
@@ -81,7 +81,7 @@ public class PierceModifier implements IAttachmentModifier<Modifier, Integer> {
         public void initComponents() {
             Modifier pierce = getValue();
             if (pierce != null) {
-                long eval = Math.round(AttachmentPropertyManager.eval(pierce, 5));
+                long eval = Math.round(AccessoryPropertyManager.eval(pierce, 5));
                 eval = Math.max(eval, 1);
                 if (eval > 5) {
                     components.add(Component.translatable("tooltip.tacz.attachment.pierce.increase").withStyle(ChatFormatting.GREEN));

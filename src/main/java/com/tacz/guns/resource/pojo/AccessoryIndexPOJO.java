@@ -1,12 +1,12 @@
 package com.tacz.guns.resource.pojo;
 
 import com.google.gson.annotations.SerializedName;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
 
-public class AttachmentIndexPOJO {
+public class AccessoryIndexPOJO {
     @SerializedName("name")
     private String name;
 
@@ -21,7 +21,7 @@ public class AttachmentIndexPOJO {
     private ResourceLocation data;
 
     @SerializedName("type")
-    private AttachmentType type;
+    private AccessoryType type;
 
     @SerializedName("sort")
     private int sort;
@@ -46,7 +46,7 @@ public class AttachmentIndexPOJO {
         return data;
     }
 
-    public AttachmentType getType() {
+    public AccessoryType getType() {
         return type;
     }
 

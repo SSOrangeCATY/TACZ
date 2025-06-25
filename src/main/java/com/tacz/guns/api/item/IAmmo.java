@@ -21,8 +21,6 @@ public interface IAmmo {
         return null;
     }
 
-    CompoundTag getTag(ItemStack ammo);
-
     /**
      * 获取弹药 ID
      *

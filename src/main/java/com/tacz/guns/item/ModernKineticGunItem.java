@@ -6,7 +6,7 @@ import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.entity.ReloadState;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
 import com.tacz.guns.api.item.gun.FireMode;
 import com.tacz.guns.api.item.nbt.GunItemDataAccessor;
@@ -16,8 +16,8 @@ import com.tacz.guns.entity.EntityKineticBullet;
 import com.tacz.guns.entity.shooter.ShooterDataHolder;
 import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.pojo.data.attachment.EffectData;
-import com.tacz.guns.resource.pojo.data.attachment.MeleeData;
+import com.tacz.guns.resource.pojo.data.accessory.EffectData;
+import com.tacz.guns.resource.pojo.data.accessory.MeleeData;
 import com.tacz.guns.resource.pojo.data.gun.*;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -182,14 +182,14 @@ public class ModernKineticGunItem extends AbstractGunItem implements GunItemData
             GunMeleeData meleeData = gunIndex.getGunData().getMeleeData();
             float distance = meleeData.getDistance();
 
-            ResourceLocation muzzleId = this.getAttachmentId(gunItem, AttachmentType.MUZZLE);
+            ResourceLocation muzzleId = this.getAccessoryId(gunItem, AccessoryType.MUZZLE);
             MeleeData muzzleData = getMeleeData(muzzleId);
             if (muzzleData != null) {
                 doMelee(user, distance, muzzleData.getDistance(), muzzleData.getRangeAngle(), muzzleData.getKnockback(), muzzleData.getDamage(), muzzleData.getEffects());
                 return;
             }
 
-            ResourceLocation stockId = this.getAttachmentId(gunItem, AttachmentType.STOCK);
+            ResourceLocation stockId = this.getAccessoryId(gunItem, AccessoryType.STOCK);
             MeleeData stockData = getMeleeData(stockId);
             if (stockData != null) {
                 doMelee(user, distance, stockData.getDistance(), stockData.getRangeAngle(), stockData.getKnockback(), stockData.getDamage(), stockData.getEffects());

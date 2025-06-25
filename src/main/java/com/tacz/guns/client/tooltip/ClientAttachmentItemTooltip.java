@@ -4,15 +4,15 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
 import com.tacz.guns.client.resource.ClientAssetsManager;
 import com.tacz.guns.client.resource.pojo.PackInfo;
 import com.tacz.guns.inventory.tooltip.AttachmentItemTooltip;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -67,7 +67,7 @@ public class ClientAttachmentItemTooltip implements ClientTooltipComponent {
             if (!(gun.getItem() instanceof IGun iGun)) {
                 return;
             }
-            if (iGun.allowAttachment(gun, attachment)) {
+            if (iGun.allowAccessory(gun, attachment)) {
                 output.add(gun);
             }
         });
@@ -152,9 +152,9 @@ public class ClientAttachmentItemTooltip implements ClientTooltipComponent {
         return String.format("#%02X%02X%02X", r, g, b);
     }
 
-    private void addText(AttachmentType type) {
+    private void addText(AccessoryType type) {
         TimelessAPI.getClientAttachmentIndex(attachmentId).ifPresent(index -> {
-            AttachmentData data = index.getData();
+            AccessoryData data = index.getData();
 
             @Nullable String tooltipKey = index.getTooltipKey();
             if (tooltipKey != null) {
@@ -163,7 +163,7 @@ public class ClientAttachmentItemTooltip implements ClientTooltipComponent {
                 Arrays.stream(split).forEach(s -> components.add(Component.literal(s).withStyle(ChatFormatting.GRAY)));
             }
 
-            if (attachment.getItem() instanceof IAttachment iAttachment) {
+            if (attachment.getItem() instanceof IAccessory iAttachment) {
                 TimelessAPI.getClientAttachmentIndex(attachmentId).ifPresent(attachmentIndex -> {
                     if (iAttachment.hasCustomLaserColor(attachment)) {
                         int color = iAttachment.getLaserColor(attachment);
@@ -175,7 +175,7 @@ public class ClientAttachmentItemTooltip implements ClientTooltipComponent {
                 });
             }
 
-            if (type == AttachmentType.SCOPE) {
+            if (type == AccessoryType.SCOPE) {
                 float[] zoom = index.getZoom();
                 if (zoom != null) {
                     String[] zoomText = new String[zoom.length];
@@ -187,7 +187,7 @@ public class ClientAttachmentItemTooltip implements ClientTooltipComponent {
                 }
             }
 
-            if (type == AttachmentType.EXTENDED_MAG) {
+            if (type == AccessoryType.EXTENDED_MAG) {
                 int magLevel = data.getExtendedMagLevel();
                 if (magLevel == 1) {
                     components.add(Component.translatable("tooltip.tacz.attachment.extended_mag_level_1").withStyle(ChatFormatting.GRAY));

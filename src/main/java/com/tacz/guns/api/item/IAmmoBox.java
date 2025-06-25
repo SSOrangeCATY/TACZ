@@ -8,7 +8,6 @@ import net.minecraft.world.item.ItemStack;
  * 子弹盒接口
  */
 public interface IAmmoBox {
-    CompoundTag getTag(ItemStack ammoBox);
     /**
      * 获取子弹盒中的子弹 ID
      *

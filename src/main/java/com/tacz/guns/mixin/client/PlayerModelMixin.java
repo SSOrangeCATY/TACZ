@@ -18,10 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerModel.class)
 public class PlayerModelMixin<T extends LivingEntity> extends HumanoidModel<T> {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart leftSleeve;
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public ModelPart rightSleeve;
 
@@ -29,7 +29,7 @@ public class PlayerModelMixin<T extends LivingEntity> extends HumanoidModel<T> {
         super(part);
     }
 
-    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At(value = "TAIL"))
+    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At(value = "TAIL"),remap = false)
     private void setRotationAnglesTail(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         if (!(entityIn instanceof Player player)) {
             return;

@@ -4,11 +4,11 @@ import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.item.gun.FireMode;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import com.tacz.guns.resource.pojo.data.gun.Bolt;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,7 +22,7 @@ import net.minecraft.world.item.ItemStack;
 public final class GunPropertyDiagrams {
     public static int getHidePropertyButtonYOffset() {
         int[] startYOffset = new int[]{49};
-        AttachmentPropertyManager.getModifiers().forEach((key, value) -> {
+        AccessoryPropertyManager.getModifiers().forEach((key, value) -> {
             startYOffset[0] += value.getDiagramsDataSize() * 10;
         });
         return startYOffset[0];
@@ -40,7 +40,7 @@ public final class GunPropertyDiagrams {
         if (iGun == null) {
             return;
         }
-        AttachmentCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
+        AccessoryCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
         if (cacheProperty == null) {
             return;
         }
@@ -93,7 +93,7 @@ public final class GunPropertyDiagrams {
                 int ammoAmount = gunData.getAmmoAmount() + barrelBulletAmount;
                 double ammoAmountPercent = Math.min(ammoAmount / 100.0, 1);
                 int ammoLength = (int) (barStartX + barMaxWidth * ammoAmountPercent);
-                int maxAmmoCount = AttachmentDataUtils.getAmmoCountWithAttachment(gunItem, index.getGunData()) + barrelBulletAmount;
+                int maxAmmoCount = AccessoryDataUtils.getAmmoCountWithAttachment(gunItem, index.getGunData()) + barrelBulletAmount;
                 int addAmmoCount = Math.max(maxAmmoCount - ammoAmount, 0);
                 int addAmmoCountLength = (int) (barMaxWidth * addAmmoCount / 100.0);
 
@@ -125,7 +125,7 @@ public final class GunPropertyDiagrams {
 
             yOffset[0] += 10;
 
-            AttachmentPropertyManager.getModifiers().forEach((key, value) -> value.getPropertyDiagramsData(gunItem, gunData, cacheProperty).forEach(data -> {
+            AccessoryPropertyManager.getModifiers().forEach((key, value) -> value.getPropertyDiagramsData(gunItem, gunData, cacheProperty).forEach(data -> {
                 double defaultPercent = data.defaultPercent();
                 double modifierPercent = data.modifierPercent();
                 double modifier = data.modifier().doubleValue();

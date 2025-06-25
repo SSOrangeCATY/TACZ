@@ -7,7 +7,7 @@ import com.tacz.guns.client.renderer.item.AnimateGeoItemRenderer;
 import com.tacz.guns.client.sound.SoundPlayManager;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ClientMessagePlayerDrawGun;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -55,7 +55,7 @@ public class LocalPlayerDraw {
         if (currentGun != null) {
             doDraw(currentItem, putAwayTime);
             // 刷新配件数据
-            AttachmentPropertyManager.postChangeEvent(player, currentItem);
+            AccessoryPropertyManager.postChangeEvent(player, currentItem);
         }
     }
 

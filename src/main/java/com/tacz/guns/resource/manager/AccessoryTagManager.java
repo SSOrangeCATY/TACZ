@@ -23,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 
-public class AttachmentsTagManager extends SimplePreparableReloadListener<Map<ResourceLocation, List<JsonElement>>> implements INetworkCacheReloadListener {
+public class AccessoryTagManager extends SimplePreparableReloadListener<Map<ResourceLocation, List<JsonElement>>> implements INetworkCacheReloadListener {
     private final Map<ResourceLocation, Set<String>> tags = Maps.newHashMap();
-    private final Map<ResourceLocation, Set<String>> allow_attachments = Maps.newHashMap();
+    private final Map<ResourceLocation, Set<String>> allow_accessories = Maps.newHashMap();
 
     private final Gson gson;
     private final Marker marker;
@@ -33,7 +33,7 @@ public class AttachmentsTagManager extends SimplePreparableReloadListener<Map<Re
     private final FileToIdConverter fileToIdConverter;
     protected Map<ResourceLocation, String> networkCache;
 
-    public AttachmentsTagManager() {
+    public AccessoryTagManager() {
         this.gson = CommonAssetsManager.GSON;
         this.marker = MarkerManager.getMarker("AllowTagManager");
         this.fileToIdConverter = FileToIdConverter.json("tacz_tags/attachments");
@@ -48,7 +48,7 @@ public class AttachmentsTagManager extends SimplePreparableReloadListener<Map<Re
     @Override
     protected void apply(Map<ResourceLocation, List<JsonElement>> pObject, ResourceManager pResourceManager, ProfilerFiller pProfiler) {
         tags.clear();
-        allow_attachments.clear();
+        allow_accessories.clear();
         ImmutableMap.Builder<ResourceLocation, String> builder = ImmutableMap.builder();
 
         for (Map.Entry<ResourceLocation, List<JsonElement>> entry : pObject.entrySet()) {
@@ -72,7 +72,7 @@ public class AttachmentsTagManager extends SimplePreparableReloadListener<Map<Re
 
             if (id.getPath().startsWith("allow_attachments/") && id.getPath().length()>18) {
                 ResourceLocation gunId = id.withPath(id.getPath().substring(18));
-                allow_attachments.computeIfAbsent(gunId, (v) -> Sets.newHashSet()).addAll(temp);
+                allow_accessories.computeIfAbsent(gunId, (v) -> Sets.newHashSet()).addAll(temp);
             } else {
                 tags.computeIfAbsent(id, (v) -> Sets.newHashSet()).addAll(temp);
             }
@@ -102,6 +102,6 @@ public class AttachmentsTagManager extends SimplePreparableReloadListener<Map<Re
     }
 
     public Set<String> getAllowAttachmentTags(ResourceLocation registryName) {
-        return allow_attachments.get(registryName);
+        return allow_accessories.get(registryName);
     }
 }

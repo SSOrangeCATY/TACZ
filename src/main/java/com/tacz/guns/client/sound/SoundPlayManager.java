@@ -1,7 +1,7 @@
 package com.tacz.guns.client.sound;
 
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.client.resource.GunDisplayInstance;
 import com.tacz.guns.config.common.GunConfig;
 import com.tacz.guns.init.ModSounds;
@@ -60,11 +60,11 @@ public class SoundPlayManager {
     }
 
     public static void playerRefitSound(ItemStack attachmentItem, LocalPlayer player, String soundName) {
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachmentItem);
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachmentItem);
         if (iAttachment == null) {
             return;
         }
-        ResourceLocation attachmentId = iAttachment.getAttachmentId(attachmentItem);
+        ResourceLocation attachmentId = iAttachment.getAccessoryId(attachmentItem);
         TimelessAPI.getClientAttachmentIndex(attachmentId).ifPresent(index -> {
             Map<String, ResourceLocation> sounds = index.getSounds();
             if (sounds.containsKey(soundName)) {

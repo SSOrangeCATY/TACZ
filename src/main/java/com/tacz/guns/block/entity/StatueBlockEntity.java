@@ -81,12 +81,14 @@ public class StatueBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag,registries);
+        if(gunItem.isEmpty()) return;
         tag.put(ITEM_TAG, gunItem.save(registries));
     }
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         CompoundTag tag = super.getUpdateTag(registries);
+        if(gunItem.isEmpty()) return tag;
         tag.put(ITEM_TAG, gunItem.save(registries));
         return tag;
     }

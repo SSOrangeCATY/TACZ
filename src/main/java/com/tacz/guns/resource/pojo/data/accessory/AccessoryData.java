@@ -1,4 +1,4 @@
-package com.tacz.guns.resource.pojo.data.attachment;
+package com.tacz.guns.resource.pojo.data.accessory;
 
 import com.google.common.collect.Maps;
 import com.google.gson.annotations.Expose;
@@ -8,7 +8,7 @@ import com.tacz.guns.api.modifier.JsonProperty;
 import javax.annotation.Nullable;
 import java.util.Map;
 
-public class AttachmentData {
+public class AccessoryData {
     @Expose(serialize = false, deserialize = false)
     private Map<String, JsonProperty<?>> modifier = Maps.newHashMap();
 

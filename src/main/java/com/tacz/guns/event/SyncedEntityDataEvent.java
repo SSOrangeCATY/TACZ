@@ -1,42 +1,37 @@
 package com.tacz.guns.event;
 
-import com.tacz.guns.GunMod;
 import com.tacz.guns.entity.sync.core.*;
+import com.tacz.guns.init.ModAttachmentTypes;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ServerMessageUpdateEntityData;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @EventBusSubscriber
 public final class SyncedEntityDataEvent {
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, GunMod.MOD_ID);
-    public static final Supplier<AttachmentType<DataHolder>> DATA_HOLDER = ATTACHMENT_TYPES.register("data_holder", () -> AttachmentType.builder(DataHolder::new).serialize(new DataHolderAttachmentSerializer()).build());
-
     @SubscribeEvent
     public static void onStartTracking(PlayerEvent.StartTracking event) {
+        Entity entity = event.getTarget();
+        DataHolder holder;
+
+        if(!entity.hasData(ModAttachmentTypes.DATA_HOLDER)){
+            holder = entity.setData(ModAttachmentTypes.DATA_HOLDER,new DataHolder());
+        }else{
+            holder = entity.getData(ModAttachmentTypes.DATA_HOLDER);
+        }
+
         if (!event.getEntity().level().isClientSide()) {
-            Entity entity = event.getTarget();
-            DataHolder holder = SyncedEntityData.instance().getDataHolder(entity);
             if (holder != null) {
                 List<DataEntry<?, ?>> entries = holder.gatherAll();
                 entries.removeIf(entry -> !entry.getKey().syncMode().isTracking());
@@ -63,7 +58,7 @@ public final class SyncedEntityDataEvent {
 
     @SubscribeEvent
     public static void onPlayerClone(PlayerEvent.Clone event) {
-        if(!event.getOriginal().hasData(DATA_HOLDER)) return;
+        if(!event.getOriginal().hasData(ModAttachmentTypes.DATA_HOLDER)) return;
 
         Player original = event.getOriginal();
         DataHolder oldHolder = SyncedEntityData.instance().getDataHolder(original);

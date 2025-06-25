@@ -12,7 +12,7 @@ import com.tacz.guns.GunMod;
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.client.gui.components.FlatColorButton;
 import com.tacz.guns.client.gui.components.GunPackList;
@@ -39,6 +39,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -53,7 +54,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import org.apache.commons.lang3.StringUtils;
@@ -119,7 +119,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         });
 
         List<Pair<ResourceLocation, ResourceLocation>> recipeIds = Lists.newArrayList();
-
+        List<ResourceLocation> iDs = Lists.newArrayList();
         if (Minecraft.getInstance().level != null) {
             RecipeManager recipeManager = Minecraft.getInstance().level.getRecipeManager();
             List<RecipeHolder<GunSmithTableRecipe>> recipeList = recipeManager.getAllRecipesFor(ModRecipe.GUN_SMITH_TABLE_CRAFTING.get());
@@ -140,6 +140,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
                 ResourceLocation groupName = recipe.getResult().getGroup();
                 if (recipeKeys.containsKey(groupName)) {
                     recipeIds.add(Pair.of(groupName, id));
+                    iDs.add(id);
                 }
             }
         }
@@ -150,14 +151,15 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
             }
             RecipeFilter filter = blockIndex.getFilter();
             if (filter != null) {
-                return filter.filter(recipeIds, Pair::value);
+                return filter.filter(iDs);
             }
             return null;
-        }).orElse(recipeIds).forEach(entry -> {
-            ResourceLocation groupName = entry.key();
-            if (recipeKeys.containsKey(groupName)) {
-                recipes.computeIfAbsent(groupName, g -> Lists.newArrayList()).add(entry.value());
-            }
+        }).orElse(iDs).forEach(entry -> {
+            recipeIds.stream().filter((pair)->
+                recipeKeys.containsKey(pair.key())
+            ).toList().forEach(recipeId -> {
+                recipes.computeIfAbsent(recipeId.key(), g -> Lists.newArrayList()).add(recipeId.value());
+            });
         });
 
         for (var entry : recipes.entrySet()) {
@@ -202,14 +204,14 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
                 if (result.getItem() instanceof IAmmo iAmmo) {
                     return iAmmo.isAmmoOfGun(stack, result);
                 }
-                if (result.getItem() instanceof IAttachment) {
-                    return igun.allowAttachment(stack, result);
+                if (result.getItem() instanceof IAccessory) {
+                    return igun.allowAccessory(stack, result);
                 }
                 return false;
             }
-            if (stack.getItem() instanceof IAttachment) {
+            if (stack.getItem() instanceof IAccessory) {
                 if (result.getItem() instanceof IGun iGun) {
-                    return iGun.allowAttachment(result, stack);
+                    return iGun.allowAccessory(result, stack);
                 }
                 return false;
             }
@@ -273,8 +275,9 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         if (this.filterList == null) {
             this.filterList = new GunPackList(this.minecraft, 134, this.imageHeight, topPos, 15, recipes, this);
         }
-        this.filterList.updateSize(134, this.imageHeight, topPos, topPos+imageHeight+1);
-        this.filterList.setLeftPos(leftPos);
+        this.filterList.updateSizeAndPosition(134, topPos, topPos+imageHeight+1);
+        this.filterList.setHeight(this.imageHeight);
+        this.filterList.setX(leftPos);
 
         this.classifyRecipes();
         this.clearWidgets();
@@ -297,59 +300,98 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
     }
 
     private void addCraftButton() {
-        this.addRenderableWidget(new ImageButton(leftPos + 289, topPos + 162, 48, 18, 138, 164, 18, TEXTURE, b -> {
-            if (this.selectedRecipe != null && playerIngredientCount != null) {
-                // 检查是否能合成，不能就不发包
-                List<GunSmithTableIngredient> inputs = selectedRecipe.getInputs();
-                int size = inputs.size();
-                for (int i = 0; i < size; i++) {
-                    if (i >= playerIngredientCount.size()) {
-                        return;
-                    }
-                    int hasCount = playerIngredientCount.get(i);
-                    int needCount = inputs.get(i).count();
-                    boolean isCreative = Minecraft.getInstance().player != null && Minecraft.getInstance().player.isCreative();
-                    // 拥有数量小于需求数量，不发包
-                    if (hasCount < needCount && !isCreative) {
-                        return;
+        WidgetSprites buttonSprites = new WidgetSprites(
+                TEXTURE,
+                TEXTURE
+        );
+
+        ImageButton craftButton = new ImageButton(
+                leftPos + 289,
+                topPos + 162,
+                48,
+                18,
+                buttonSprites,
+                (button) -> {
+                    if (this.selectedRecipe != null && playerIngredientCount != null) {
+                        // 检查是否能合成，不能就不发包
+                        List<GunSmithTableIngredient> inputs = selectedRecipe.getInputs();
+                        int size = inputs.size();
+                        for (int i = 0; i < size; i++) {
+                            if (i >= playerIngredientCount.size()) {
+                                return;
+                            }
+                            int hasCount = playerIngredientCount.get(i);
+                            int needCount = inputs.get(i).count();
+                            boolean isCreative = Minecraft.getInstance().player != null && Minecraft.getInstance().player.isCreative();
+                            // 拥有数量小于需求数量，不发包
+                            if (hasCount < needCount && !isCreative) {
+                                return;
+                            }
+                        }
+                        NetworkHandler.sendToServer(new ClientMessageCraft(this.selectedRecipe.getId(), this.menu.containerId));
                     }
                 }
-                NetworkHandler.CHANNEL.sendToServer(new ClientMessageCraft(this.selectedRecipe.getId(), this.menu.containerId));
-            }
-        }));
+        );
+
+        this.addRenderableWidget(craftButton);
     }
 
     private void addUrlButton() {
-        this.addRenderableWidget(new ImageButton(leftPos + 112, topPos + 164, 18, 18, 149, 211, 18, TEXTURE, b -> {
-            if (this.selectedRecipe != null) {
-                ItemStack output = selectedRecipe.getOutput();
-                Item item = output.getItem();
-                ResourceLocation id;
-                if (item instanceof IGun iGun) {
-                    id = iGun.getGunId(output);
-                } else if (item instanceof IAttachment iAttachment) {
-                    id = iAttachment.getAttachmentId(output);
-                } else if (item instanceof IAmmo iAmmo) {
-                    id = iAmmo.getAmmoId(output);
-                } else {
-                    return;
-                }
+        // 创建 WidgetSprites - 使用新的纹理系统
+        WidgetSprites urlButtonSprites = new WidgetSprites(
+                TEXTURE,
+                TEXTURE
+        );
 
-                PackInfo packInfo = ClientAssetsManager.INSTANCE.getPackInfo(id);
-                if (packInfo == null) {
-                    return;
-                }
-                String url = packInfo.getUrl();
-                if (StringUtils.isNotBlank(url) && minecraft != null) {
-                    minecraft.setScreen(new ConfirmLinkScreen(yes -> {
-                        if (yes) {
-                            Util.getPlatform().openUri(url);
+        // 创建 ImageButton
+        ImageButton urlButton = new ImageButton(
+                leftPos + 112,
+                topPos + 164,
+                18,
+                18,
+                urlButtonSprites,
+                (button) -> {
+                    if (this.selectedRecipe != null) {
+                        ItemStack output = selectedRecipe.getOutput();
+                        Item item = output.getItem();
+                        ResourceLocation id;
+
+                        // 确定物品类型并获取ID
+                        if (item instanceof IGun iGun) {
+                            id = iGun.getGunId(output);
+                        } else if (item instanceof IAccessory iAttachment) {
+                            id = iAttachment.getAccessoryId(output);
+                        } else if (item instanceof IAmmo iAmmo) {
+                            id = iAmmo.getAmmoId(output);
+                        } else {
+                            return;
                         }
-                        minecraft.setScreen(this);
-                    }, url, false));
+
+                        // 获取包信息
+                        PackInfo packInfo = ClientAssetsManager.INSTANCE.getPackInfo(id);
+                        if (packInfo == null) {
+                            return;
+                        }
+
+                        String url = packInfo.getUrl();
+                        if (StringUtils.isNotBlank(url) && minecraft != null) {
+                            // 创建确认链接屏幕
+                            minecraft.setScreen(new ConfirmLinkScreen(
+                                    yes -> {
+                                        if (yes) {
+                                            Util.getPlatform().openUri(url);
+                                        }
+                                        minecraft.setScreen(this);
+                                    },
+                                    url,
+                                    false
+                            ));
+                        }
+                    }
                 }
-            }
-        }));
+                );
+
+        this.addRenderableWidget(urlButton);
     }
 
     private void addIndexButtons() {
@@ -408,55 +450,119 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
     }
 
     private void addIndexPageButtons() {
-        this.addRenderableWidget(new ImageButton(leftPos + 143, topPos + 56, 96, 6, 40, 166, 6, TEXTURE, b -> {
-            if (this.indexPage > 0) {
-                this.indexPage--;
-                this.init();
-            }
-        }));
-        this.addRenderableWidget(new ImageButton(leftPos + 143, topPos + 171, 96, 6, 40, 186, 6, TEXTURE, b -> {
-            if (selectedRecipeList != null && !selectedRecipeList.isEmpty()) {
-                int maxIndexPage = (selectedRecipeList.size() - 1) / 6;
-                if (this.indexPage < maxIndexPage) {
-                    this.indexPage++;
-                    this.init();
+        WidgetSprites buttonSprites = new WidgetSprites(
+                TEXTURE,
+                TEXTURE
+        );
+
+        ImageButton prevButton = new ImageButton(
+                leftPos + 143,
+                topPos + 56,
+                96,
+                6,
+                buttonSprites,
+                (button) -> {
+                    if (this.indexPage > 0) {
+                        this.indexPage--;
+                        this.init();
+                    }
                 }
-            }
-        }));
+        );
+        this.addRenderableWidget(prevButton);
+
+        ImageButton nextButton = new ImageButton(
+                leftPos + 143,
+                topPos + 171,
+                96,
+                6,
+                buttonSprites,
+                (button) -> {
+                    if (selectedRecipeList != null && !selectedRecipeList.isEmpty()) {
+                        int maxIndexPage = (selectedRecipeList.size() - 1) / 6;
+                        if (this.indexPage < maxIndexPage) {
+                            this.indexPage++;
+                            this.init();
+                        }
+                    }
+                }
+        );
+        this.addRenderableWidget(nextButton);
     }
 
     private void addTypePageButtons() {
-        this.addRenderableWidget(new ImageButton(leftPos + 136, topPos + 4, 18, 20, 0, 162, 20, TEXTURE, b -> {
-            if (this.typePage > 0) {
-                this.typePage--;
-                this.init();
-            }
-        }));
-        this.addRenderableWidget(new ImageButton(leftPos + 327, topPos + 4, 18, 20, 20, 162, 20, TEXTURE, b -> {
-            int maxIndexPage = (recipes.size() - 1) / 7;
-            if (this.typePage < maxIndexPage) {
-                this.typePage++;
-                this.init();
-            }
-        }));
+        WidgetSprites buttonSprites = new WidgetSprites(
+                TEXTURE,
+                TEXTURE
+        );
+
+        this.addRenderableWidget(new ImageButton(
+                leftPos + 136,
+                topPos + 4,
+                18,
+                20,
+                buttonSprites,
+                b -> {
+                    if (this.typePage > 0) {
+                        this.typePage--;
+                        this.init();
+                    }
+                }
+        ));
+
+        this.addRenderableWidget(new ImageButton(
+                leftPos + 327,
+                topPos + 4,
+                18,
+                20,
+                buttonSprites,
+                b -> {
+                    int maxIndexPage = (recipes.size() - 1) / 7;
+                    if (this.typePage < maxIndexPage) {
+                        this.typePage++;
+                        this.init();
+                    }
+                }
+        ));
     }
 
     private void addScaleButtons() {
-        this.addRenderableWidget(new ImageButton(leftPos + 5, topPos + 5, 10, 10, 188, 173, 10, TEXTURE, b -> {
-            this.scale = Math.min(this.scale + 20, 200);
-        }));
-        this.addRenderableWidget(new ImageButton(leftPos + 17, topPos + 5, 10, 10, 200, 173, 10, TEXTURE, b -> {
-            this.scale = Math.max(this.scale - 20, 10);
-        }));
-        this.addRenderableWidget(new ImageButton(leftPos + 29, topPos + 5, 10, 10, 212, 173, 10, TEXTURE, b -> {
-            this.scale = 70;
-        }));
+        WidgetSprites buttonSprites = new WidgetSprites(
+                TEXTURE,
+                TEXTURE
+        );
+
+        this.addRenderableWidget(new ImageButton(
+                leftPos + 5,
+                topPos + 5,
+                10,
+                10,
+                buttonSprites,
+                b -> this.scale = Math.min(this.scale + 20, 200)
+        ));
+
+        this.addRenderableWidget(new ImageButton(
+                leftPos + 17,
+                topPos + 5,
+                10,
+                10,
+                buttonSprites,
+                b -> this.scale = Math.max(this.scale - 20, 10)
+        ));
+
+        this.addRenderableWidget(new ImageButton(
+                leftPos + 29,
+                topPos + 5,
+                10,
+                10,
+                buttonSprites,
+                b -> this.scale = 70
+        ));
     }
 
     @Override
-    public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
-        if (pMouseX > leftPos + 143 && pMouseX < leftPos + 143 + 94 && pMouseY > topPos + 66 && pMouseY < topPos + 66 + 85) {
-            if (pDelta > 0) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (mouseX > leftPos + 143 && mouseX < leftPos + 143 + 94 && mouseY > topPos + 66 && mouseY < topPos + 66 + 85) {
+            if (scrollX > 0 || scrollY > 0) {
                 this.indexPage = Math.max(0, this.indexPage - 1);
             } else {
                 int maxIndexPage = (selectedRecipeList.size() - 1) / 6;
@@ -465,7 +571,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
             this.init();
             return true;
         }
-        return super.mouseScrolled(pMouseX, pMouseY, pDelta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX,scrollY);
     }
 
     @Override
@@ -481,7 +587,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         graphics.drawString(font, Component.translatable("gui.tacz.gun_smith_table.ingredient"), leftPos + 254, topPos + 50, 0x555555, false);
         drawModCenteredString(graphics, font, Component.translatable("gui.tacz.gun_smith_table.craft"), leftPos + 312, topPos + 167, 0xFFFFFF);
         if (!this.filterEnabled && this.selectedRecipe != null) {
-            this.renderLeftModel(this.selectedRecipe);
+            this.renderLeftModel(graphics,this.selectedRecipe);
             this.renderPackInfo(graphics, this.selectedRecipe);
             graphics.drawString(font, Component.translatable("gui.tacz.gun_smith_table.count", this.selectedRecipe.getResult().getResult().getCount()), leftPos + 254, topPos + 140, 0x555555, false);
         }
@@ -499,8 +605,8 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         ResourceLocation id;
         if (item instanceof IGun iGun) {
             id = iGun.getGunId(output);
-        } else if (item instanceof IAttachment iAttachment) {
-            id = iAttachment.getAttachmentId(output);
+        } else if (item instanceof IAccessory iAttachment) {
+            id = iAttachment.getAccessoryId(output);
         } else if (item instanceof IAmmo iAmmo) {
             id = iAmmo.getAmmoId(output);
         } else {
@@ -613,7 +719,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
     }
 
     @SuppressWarnings("deprecation")
-    private void renderLeftModel(GunSmithTableRecipe recipe) {
+    private void renderLeftModel(GuiGraphics gui,GunSmithTableRecipe recipe) {
         // 先标记一下，渲染高模
         RenderDistance.markGuiRenderTimestamp();
 
@@ -634,12 +740,12 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         int scissorH = (int) (height * windowGuiScale);
         RenderSystem.enableScissor(scissorX, scissorY, scissorW, scissorH);
 
-        Minecraft.getInstance().textureManager.getTexture(TextureAtlas.LOCATION_BLOCKS).setFilter(false, false);
+        Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).setFilter(false, false);
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        PoseStack posestack = RenderSystem.getModelViewStack();
+        PoseStack posestack = gui.pose();
         posestack.pushPose();
         posestack.translate(xPos, yPos, 200);
         posestack.translate(8.0D, 8.0D, 0.0D);
@@ -670,7 +776,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
 
     @Override
     protected void renderBg(@NotNull GuiGraphics gui, float partialTick, int mouseX, int mouseY) {
-        this.renderBackground(gui);
+        this.renderBackground(gui,mouseX,mouseY,partialTick);
         gui.blit(SIDE, leftPos, topPos, 0, 0, 134, 187);
         gui.blit(TEXTURE, leftPos + 136, topPos + 27, 0, 0, 208, 160);
     }

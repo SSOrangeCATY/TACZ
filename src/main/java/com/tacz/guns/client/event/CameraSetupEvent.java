@@ -9,22 +9,21 @@ import com.tacz.guns.api.client.other.KeepingItemRenderer;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.event.common.GunFireEvent;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.gun.AbstractGunItem;
-import com.tacz.guns.api.item.nbt.AttachmentItemDataAccessor;
+import com.tacz.guns.api.item.nbt.AccessoryItemDataAccessor;
 import com.tacz.guns.api.modifier.ParameterizedCachePair;
 import com.tacz.guns.client.renderer.item.AnimateGeoItemRenderer;
 import com.tacz.guns.client.resource.GunDisplayInstance;
 import com.tacz.guns.client.resource.index.ClientGunIndex;
 import com.tacz.guns.config.client.RenderConfig;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import com.tacz.guns.resource.modifier.custom.RecoilModifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.util.math.MathUtil;
 import com.tacz.guns.util.math.SecondOrderDynamics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -128,12 +127,12 @@ public class CameraSetupEvent {
                 event.setFOV(fov);
                 return;
             }
-            ResourceLocation scopeItemId = iGun.getAttachmentId(stack, AttachmentType.SCOPE);
+            ResourceLocation scopeItemId = iGun.getAccessoryId(stack, AccessoryType.SCOPE);
             if (scopeItemId.equals(DefaultAssets.EMPTY_ATTACHMENT_ID)) {
-                scopeItemId = iGun.getBuiltInAttachmentId(stack, AttachmentType.SCOPE);
+                scopeItemId = iGun.getBuiltInAccessoryId(stack, AccessoryType.SCOPE);
             }
-            CompoundTag scopeTag = iGun.getAttachmentTag(stack, AttachmentType.SCOPE);
-            int zoomNumber = AttachmentItemDataAccessor.getZoomNumberFromTag(scopeTag);
+            ItemStack scope = iGun.getAccessory(stack, AccessoryType.SCOPE);
+            int zoomNumber = AccessoryItemDataAccessor.getZoomNumberFromItemStack(scope);
             // 尝试使用配件fov修改，若无则尝试使用枪械本身fov修改，否则维持不变
             float modifiedFov = TimelessAPI.getClientAttachmentIndex(scopeItemId)
                     .map(index -> {
@@ -171,7 +170,7 @@ public class CameraSetupEvent {
             if (!(mainHandItem.getItem() instanceof IGun iGun)) {
                 return;
             }
-            AttachmentCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
+            AccessoryCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
             if (cacheProperty == null) {
                 return;
             }

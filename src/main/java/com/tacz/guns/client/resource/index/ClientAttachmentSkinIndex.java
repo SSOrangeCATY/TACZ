@@ -36,7 +36,7 @@ public class ClientAttachmentSkinIndex {
         // 检查模型
         ResourceLocation modelLocation = skinPojo.getModel();
         Preconditions.checkArgument(modelLocation != null, "display object missing model field");
-        index.model = ClientAttachmentIndex.getOrLoadAttachmentModel(modelLocation);
+        index.model = ClientAccessoryIndex.getOrLoadAttachmentModel(modelLocation);
         Preconditions.checkArgument(index.model != null, "there is no model data in the model file");
         // 检查默认材质
         ResourceLocation textureLocation = skinPojo.getTexture();

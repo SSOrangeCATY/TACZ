@@ -3,14 +3,14 @@ package com.tacz.guns.client.gui;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.animation.screen.RefitTransform;
 import com.tacz.guns.client.gui.components.FlatColorButton;
 import com.tacz.guns.client.gui.components.refit.*;
 import com.tacz.guns.client.resource.GunDisplayInstance;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.client.sound.SoundPlayManager;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ClientMessageLaserColor;
@@ -25,11 +25,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.EventBusSubscriber;
 import org.jetbrains.annotations.NotNull;
 
-@EventBusSubscriber(value = Dist.CLIENT, modid = GunMod.MOD_ID)
 public class GunRefitScreen extends Screen {
     public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/refit_slot.png");
     public static final ResourceLocation TURN_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/refit_turn_page.png");
@@ -48,12 +45,12 @@ public class GunRefitScreen extends Screen {
         RefitTransform.init();
     }
 
-    public static int getSlotTextureXOffset(ItemStack gunItem, AttachmentType attachmentType) {
+    public static int getSlotTextureXOffset(ItemStack gunItem, AccessoryType attachmentType) {
         IGun iGun = IGun.getIGunOrNull(gunItem);
         if (iGun == null) {
             return -1;
         }
-        if (!iGun.allowAttachmentType(gunItem, attachmentType)) {
+        if (!iGun.allowAccessoryType(gunItem, attachmentType)) {
             return ICON_UV_SIZE * 6;
         }
         switch (attachmentType) {
@@ -130,7 +127,7 @@ public class GunRefitScreen extends Screen {
 
     private void addInventoryAttachmentButtons() {
         LocalPlayer player = getMinecraft().player;
-        if (RefitTransform.getCurrentTransformType() == AttachmentType.NONE || player == null) {
+        if (RefitTransform.getCurrentTransformType() == AccessoryType.NONE || player == null) {
             return;
         }
         int startX = this.width - 30;
@@ -141,10 +138,10 @@ public class GunRefitScreen extends Screen {
         Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack inventoryItem = inventory.getItem(i);
-            IAttachment attachment = IAttachment.getIAttachmentOrNull(inventoryItem);
+            IAccessory attachment = IAccessory.getIAttachmentOrNull(inventoryItem);
             IGun iGun = IGun.getIGunOrNull(player.getMainHandItem());
             if (attachment != null && iGun != null && attachment.getType(inventoryItem) == RefitTransform.getCurrentTransformType()) {
-                if (!iGun.allowAttachment(player.getMainHandItem(), inventoryItem)) {
+                if (!iGun.allowAccessory(player.getMainHandItem(), inventoryItem)) {
                     continue;
                 }
                 count++;
@@ -197,15 +194,15 @@ public class GunRefitScreen extends Screen {
         int startX = this.width - 30;
         int startY = 10;
         Inventory inventory = player.getInventory();
-        for (AttachmentType type : AttachmentType.values()) {
-            if (type == AttachmentType.NONE) {
-                if (RefitTransform.getCurrentTransformType() == AttachmentType.NONE) {
+        for (AccessoryType type : AccessoryType.values()) {
+            if (type == AccessoryType.NONE) {
+                if (RefitTransform.getCurrentTransformType() == AccessoryType.NONE) {
                     TimelessAPI.getGunDisplay(player.getMainHandItem())
                             .map(GunDisplayInstance::getLaserConfig)
                             .ifPresent(laserConfig -> {
                                 if (laserConfig.canEdit()) {
                                     // 添加镭射颜色选择器
-                                    HSVSliderGroup hsvSliderGroup = new HSVSliderGroup(width-140, height-64, 120, 16, inventory, inventory.selected, AttachmentType.NONE);
+                                    HSVSliderGroup hsvSliderGroup = new HSVSliderGroup(width-140, height-64, 120, 16, inventory, inventory.selected, AccessoryType.NONE);
                                     this.addRenderableWidget(hsvSliderGroup.getHueSlider());
                                     this.addRenderableWidget(hsvSliderGroup.getSaturationSlider());
                                 }});
@@ -213,17 +210,17 @@ public class GunRefitScreen extends Screen {
                 continue;
             }
             GunAttachmentSlot button = new GunAttachmentSlot(startX, startY, type, inventory.selected, inventory, b -> {
-                AttachmentType buttonType = ((GunAttachmentSlot) b).getType();
+                AccessoryType buttonType = ((GunAttachmentSlot) b).getType();
                 // 如果这个槽位不允许安装配件，则默认退回概览，不选中槽位。
                 if (!((GunAttachmentSlot) b).isAllow()) {
-                    if (RefitTransform.changeRefitScreenView(AttachmentType.NONE)) {
+                    if (RefitTransform.changeRefitScreenView(AccessoryType.NONE)) {
                         this.init();
                     }
                     return;
                 }
                 // 点击的是当前选中的槽位，则退回概览
-                if (RefitTransform.getCurrentTransformType() == buttonType && buttonType != AttachmentType.NONE) {
-                    if (RefitTransform.changeRefitScreenView(AttachmentType.NONE)) {
+                if (RefitTransform.getCurrentTransformType() == buttonType && buttonType != AccessoryType.NONE) {
+                    if (RefitTransform.changeRefitScreenView(AccessoryType.NONE)) {
                         this.init();
                     }
                     return;
@@ -252,9 +249,9 @@ public class GunRefitScreen extends Screen {
                 if (!button.getAttachmentItem().isEmpty()) {
                     this.addRenderableWidget(unloadButton);
 
-                    if (button.getAttachmentItem().getItem() instanceof IAttachment iAttachment) {
-                        TimelessAPI.getClientAttachmentIndex(iAttachment.getAttachmentId(button.getAttachmentItem()))
-                                .map(ClientAttachmentIndex::getLaserConfig)
+                    if (button.getAttachmentItem().getItem() instanceof IAccessory iAttachment) {
+                        TimelessAPI.getClientAttachmentIndex(iAttachment.getAccessoryId(button.getAttachmentItem()))
+                                .map(ClientAccessoryIndex::getLaserConfig)
                                 .ifPresent(laserConfig -> {
                                     if (laserConfig.canEdit()) {
                                         // 添加镭射颜色选择器

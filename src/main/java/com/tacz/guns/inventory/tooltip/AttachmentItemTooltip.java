@@ -1,6 +1,6 @@
 package com.tacz.guns.inventory.tooltip;
 
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -8,9 +8,9 @@ import net.minecraft.world.item.ItemStack;
 public class AttachmentItemTooltip implements TooltipComponent {
     private final ItemStack attachmentItem;
     private final ResourceLocation attachmentId;
-    private final AttachmentType type;
+    private final AccessoryType type;
 
-    public AttachmentItemTooltip(ResourceLocation attachmentId, AttachmentType type, ItemStack attachmentItem) {
+    public AttachmentItemTooltip(ResourceLocation attachmentId, AccessoryType type, ItemStack attachmentItem) {
         this.attachmentId = attachmentId;
         this.type = type;
         this.attachmentItem = attachmentItem;
@@ -20,7 +20,7 @@ public class AttachmentItemTooltip implements TooltipComponent {
         return attachmentId;
     }
 
-    public AttachmentType getType() {
+    public AccessoryType getType() {
         return type;
     }
 

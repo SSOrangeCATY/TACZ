@@ -4,8 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.IAccessory;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.model.BedrockGunModel;
 import com.tacz.guns.client.model.IFunctionalRenderer;
 import com.tacz.guns.client.model.SlotModel;
@@ -117,10 +117,10 @@ public class MuzzleFlashRender implements IFunctionalRenderer {
         ItemStack currentGunItem = bedrockGunModel.getCurrentGunItem();
 
         TimelessAPI.getGunDisplay(currentGunItem).ifPresent(display -> {
-            ItemStack muzzleAttachment = bedrockGunModel.getCurrentAttachmentItem().get(AttachmentType.MUZZLE);
-            IAttachment iAttachment = IAttachment.getIAttachmentOrNull(muzzleAttachment);
+            ItemStack muzzleAttachment = bedrockGunModel.getCurrentAttachmentItem().get(AccessoryType.MUZZLE);
+            IAccessory iAttachment = IAccessory.getIAttachmentOrNull(muzzleAttachment);
             if (iAttachment != null) {
-                ResourceLocation attachmentId = iAttachment.getAttachmentId(muzzleAttachment);
+                ResourceLocation attachmentId = iAttachment.getAccessoryId(muzzleAttachment);
                 TimelessAPI.getCommonAttachmentIndex(attachmentId).ifPresent(index -> {
                     var modifier = index.getData().getModifier();
                     if (modifier.containsKey(SilenceModifier.ID) && modifier.get(SilenceModifier.ID).getValue() instanceof Pair<?, ?> pair) {

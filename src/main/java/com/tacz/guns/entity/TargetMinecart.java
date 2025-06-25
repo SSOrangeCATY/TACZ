@@ -132,7 +132,7 @@ public class TargetMinecart extends AbstractMinecart implements ITargetEntity {
     public GameProfile getGameProfile() {
         if (this.gameProfile == null && this.getCustomName() != null) {
             this.gameProfile = new GameProfile(null, this.getCustomName().getString());
-            SkullBlockEntity.updateGameprofile(this.gameProfile, gameProfile -> this.gameProfile = gameProfile);
+            SkullBlockEntity.fetchGameProfile(this.gameProfile.getName()).thenAccept(gameProfile -> this.gameProfile = gameProfile.get());
         }
         return gameProfile;
     }

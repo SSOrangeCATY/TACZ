@@ -20,7 +20,7 @@ import com.tacz.guns.resource.index.CommonGunIndex;
 import com.tacz.guns.resource.manager.*;
 import com.tacz.guns.resource.network.CommonNetworkCache;
 import com.tacz.guns.resource.network.DataType;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import com.tacz.guns.resource.pojo.data.block.BlockData;
 import com.tacz.guns.resource.pojo.data.block.TabConfig;
 import com.tacz.guns.resource.pojo.data.gun.ExtraDamage;
@@ -70,30 +70,29 @@ public class CommonAssetsManager implements ICommonResourceProvider {
 
     private final List<INetworkCacheReloadListener> listeners = new ArrayList<>();
     private CommonDataManager<GunData> gunData;
-    private CommonDataManager<AttachmentData> attachmentData;
+    private CommonDataManager<AccessoryData> accessoryData;
     private CommonDataManager<BlockData> blockData;
     private CommonDataManager<CommonAmmoIndex> ammoIndex;
     private CommonDataManager<CommonGunIndex> gunIndex;
-    private CommonDataManager<CommonAttachmentIndex> attachmentIndex;
+    private CommonDataManager<CommonAttachmentIndex> accessoryIndex;
     private CommonDataManager<CommonBlockIndex> blockIndex;
     private RecipeFilterManager recipeFilterManager;
 
-    private AttachmentsTagManager attachmentsTagManager;
+    private AccessoryTagManager accessoryTagManager;
     List<LuaLibrary> libList = List.of(new LuaGunLogicConstant());
     private final ScriptManager scriptManager = new ScriptManager(new FileToIdConverter("scripts", ".lua"), libList);
 
     public void reloadAndRegister(Consumer<PreparableReloadListener> register) {
         // 这里会顺序重载，所以需要把index这种依赖data的放在后面
         gunData = register(new CommonDataManager<>(DataType.GUN_DATA, GunData.class, GSON, "data/guns", "GunDataLoader"));
-        attachmentData = register(new AttachmentDataManager());
-        attachmentsTagManager = register(new AttachmentsTagManager());
+        accessoryData = register(new AccessoryDataManager());
+        accessoryTagManager = register(new AccessoryTagManager());
         recipeFilterManager = register(new RecipeFilterManager());
         blockData = register(new CommonDataManager<>(DataType.BLOCK_DATA, BlockData.class, GSON, "data/blocks", "BlockDataLoader"));
         register.accept(scriptManager);
-
         ammoIndex = register(new CommonDataManager<>(DataType.AMMO_INDEX, CommonAmmoIndex.class, GSON, "index/ammo", "AmmoIndexLoader"));
         gunIndex = register(new CommonDataManager<>(DataType.GUN_INDEX, CommonGunIndex.class, GSON, "index/guns", "GunIndexLoader"));
-        attachmentIndex = register(new CommonDataManager<>(DataType.ATTACHMENT_INDEX, CommonAttachmentIndex.class, GSON, "index/attachments", "AttachmentIndexLoader"));
+        accessoryIndex = register(new CommonDataManager<>(DataType.ATTACHMENT_INDEX, CommonAttachmentIndex.class, GSON, "index/attachments", "AttachmentIndexLoader"));
         blockIndex = register(new CommonDataManager<>(DataType.BLOCK_INDEX, CommonBlockIndex.class, GSON, "index/blocks", "BlockIndexLoader"));
 
         listeners.forEach(register);
@@ -120,8 +119,8 @@ public class CommonAssetsManager implements ICommonResourceProvider {
 
     @Nullable
     @Override
-    public AttachmentData getAttachmentData(ResourceLocation id) {
-        return attachmentData.getData(id);
+    public AccessoryData getAttachmentData(ResourceLocation id) {
+        return accessoryData.getData(id);
     }
 
     @Nullable
@@ -161,12 +160,12 @@ public class CommonAssetsManager implements ICommonResourceProvider {
     @Nullable
     @Override
     public CommonAttachmentIndex getAttachmentIndex(ResourceLocation attachmentId) {
-        return attachmentIndex.getData(attachmentId);
+        return accessoryIndex.getData(attachmentId);
     }
 
     @Override
     public Set<Map.Entry<ResourceLocation, CommonAttachmentIndex>> getAllAttachments() {
-        return attachmentIndex.getAllData().entrySet();
+        return accessoryIndex.getAllData().entrySet();
     }
 
     @Override
@@ -187,12 +186,12 @@ public class CommonAssetsManager implements ICommonResourceProvider {
 
     @Override
     public Set<String> getAttachmentTags(ResourceLocation registryName) {
-        return attachmentsTagManager.getAttachmentTags(registryName);
+        return accessoryTagManager.getAttachmentTags(registryName);
     }
 
     @Override
     public Set<String> getAllowAttachmentTags(ResourceLocation registryName) {
-        return attachmentsTagManager.getAllowAttachmentTags(registryName);
+        return accessoryTagManager.getAllowAttachmentTags(registryName);
     }
 
     /**

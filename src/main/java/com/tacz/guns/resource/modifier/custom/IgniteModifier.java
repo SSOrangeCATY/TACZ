@@ -7,7 +7,7 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.Ignite;
 import net.minecraft.ChatFormatting;
@@ -48,8 +48,8 @@ public class IgniteModifier implements IAttachmentModifier<Ignite, Ignite> {
             igniteEntityValues.add(v.isIgniteEntity());
             igniteBlockValues.add(v.isIgniteBlock());
         });
-        boolean igniteEntity = AttachmentPropertyManager.eval(igniteEntityValues, false);
-        boolean igniteBlock = AttachmentPropertyManager.eval(igniteBlockValues, false);
+        boolean igniteEntity = AccessoryPropertyManager.eval(igniteEntityValues, false);
+        boolean igniteBlock = AccessoryPropertyManager.eval(igniteBlockValues, false);
         cache.setValue(new Ignite(igniteEntity, igniteBlock));
     }
 

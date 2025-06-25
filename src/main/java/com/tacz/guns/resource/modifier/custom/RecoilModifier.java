@@ -8,9 +8,9 @@ import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.api.modifier.ParameterizedCachePair;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import com.tacz.guns.resource.pojo.data.gun.GunRecoil;
 import com.tacz.guns.resource.pojo.data.gun.GunRecoilKeyFrame;
@@ -85,7 +85,7 @@ public class RecoilModifier implements IAttachmentModifier<Pair<Modifier, Modifi
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         ParameterizedCachePair<Float, Float> propertyCache = cacheProperty.getCache(RecoilModifier.ID);
         GunRecoil recoil = gunData.getRecoil();
 
@@ -144,8 +144,8 @@ public class RecoilModifier implements IAttachmentModifier<Pair<Modifier, Modifi
             float yaw = 1;
 
             if (modified != null) {
-                pitch = (float) AttachmentPropertyManager.eval(modified.left(), 1);
-                yaw = (float) AttachmentPropertyManager.eval(modified.right(), 1);
+                pitch = (float) AccessoryPropertyManager.eval(modified.left(), 1);
+                yaw = (float) AccessoryPropertyManager.eval(modified.right(), 1);
             }
 
             if (pitch > 1) {

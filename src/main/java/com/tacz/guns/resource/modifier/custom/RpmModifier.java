@@ -8,9 +8,9 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -47,13 +47,13 @@ public class RpmModifier implements IAttachmentModifier<Modifier, Integer> {
 
     @Override
     public void eval(List<Modifier> modifiers, CacheValue<Integer> cache) {
-        double eval = AttachmentPropertyManager.eval(modifiers, cache.getValue());
+        double eval = AccessoryPropertyManager.eval(modifiers, cache.getValue());
         cache.setValue((int) Math.round(eval));
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         IGun iGun = Objects.requireNonNull(IGun.getIGunOrNull(gunItem));
         FireMode fireMode = iGun.getFireMode(gunItem);
 
@@ -89,7 +89,7 @@ public class RpmModifier implements IAttachmentModifier<Modifier, Integer> {
         public void initComponents() {
             Modifier value = getValue();
             if (value != null) {
-                double eval = AttachmentPropertyManager.eval(value, 300);
+                double eval = AccessoryPropertyManager.eval(value, 300);
                 int rpm = (int) Math.round(eval);
                 if (rpm > 300) {
                     components.add(Component.translatable("tooltip.tacz.attachment.rpm.increase").withStyle(ChatFormatting.GREEN));

@@ -5,7 +5,7 @@ import com.tacz.guns.resource.index.CommonAmmoIndex;
 import com.tacz.guns.resource.index.CommonAttachmentIndex;
 import com.tacz.guns.resource.index.CommonBlockIndex;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.pojo.data.attachment.AttachmentData;
+import com.tacz.guns.resource.pojo.data.accessory.AccessoryData;
 import com.tacz.guns.resource.pojo.data.block.BlockData;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +18,7 @@ import java.util.Set;
 public interface ICommonResourceProvider {
     @Nullable GunData getGunData(ResourceLocation id);
 
-    @Nullable AttachmentData getAttachmentData(ResourceLocation attachmentId);
+    @Nullable AccessoryData getAttachmentData(ResourceLocation attachmentId);
 
     @Nullable BlockData getBlockData(ResourceLocation id);
 

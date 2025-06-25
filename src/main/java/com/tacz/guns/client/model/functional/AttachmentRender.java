@@ -3,8 +3,8 @@ package com.tacz.guns.client.model.functional;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.IAccessory;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.model.BedrockAttachmentModel;
 import com.tacz.guns.client.model.BedrockGunModel;
 import com.tacz.guns.client.model.IFunctionalRenderer;
@@ -25,17 +25,17 @@ import java.util.EnumMap;
 
 public class AttachmentRender implements IFunctionalRenderer {
     private final BedrockGunModel bedrockGunModel;
-    private final AttachmentType type;
+    private final AccessoryType type;
 
-    public AttachmentRender(BedrockGunModel bedrockGunModel, AttachmentType type) {
+    public AttachmentRender(BedrockGunModel bedrockGunModel, AccessoryType type) {
         this.bedrockGunModel = bedrockGunModel;
         this.type = type;
     }
 
     public static void renderAttachment(ItemStack attachmentItem, ItemStack gunItem, PoseStack poseStack, ItemDisplayContext transformType, int light, int overlay) {
         poseStack.translate(0, -1.5, 0);
-        if (attachmentItem.getItem() instanceof IAttachment iAttachment) {
-            ResourceLocation attachmentId = iAttachment.getAttachmentId(attachmentItem);
+        if (attachmentItem.getItem() instanceof IAccessory iAttachment) {
+            ResourceLocation attachmentId = iAttachment.getAccessoryId(attachmentItem);
             TimelessAPI.getClientAttachmentIndex(attachmentId).ifPresentOrElse(attachmentIndex -> {
                 BedrockAttachmentModel model = attachmentIndex.getAttachmentModel();
                 ResourceLocation texture = attachmentIndex.getModelTexture();
@@ -62,7 +62,7 @@ public class AttachmentRender implements IFunctionalRenderer {
 
     @Override
     public void render(PoseStack poseStack, VertexConsumer vertexBuffer, ItemDisplayContext transformType, int light, int overlay) {
-        EnumMap<AttachmentType, ItemStack> currentAttachmentItem = bedrockGunModel.getCurrentAttachmentItem();
+        EnumMap<AccessoryType, ItemStack> currentAttachmentItem = bedrockGunModel.getCurrentAttachmentItem();
         ItemStack attachmentItem = currentAttachmentItem.get(type);
         if (attachmentItem != null && !attachmentItem.isEmpty()) {
             Matrix3f normal = new Matrix3f(poseStack.last().normal());

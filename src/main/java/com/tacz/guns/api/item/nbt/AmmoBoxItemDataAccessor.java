@@ -4,62 +4,36 @@ import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmoBox;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.init.ModDataComponentTypes;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import com.tacz.guns.api.item.component.AmmoComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 public interface AmmoBoxItemDataAccessor extends IAmmoBox {
-    String AMMO_ID_TAG = "AmmoId";
-    String AMMO_COUNT_TAG = "AmmoCount";
-    String CREATIVE_TAG = "Creative";
-    String ALL_TYPE_CREATIVE_TAG = "AllTypeCreative";
-    String LEVEL_TAG = "Level";
-
-    @Override
-    default CompoundTag getTag(ItemStack ammoBox){
-        if (ammoBox.getItem() instanceof AmmoBoxItemDataAccessor){
-            return ammoBox.get(ModDataComponentTypes.DATA).getUnsafe();
-        }
-        return new CompoundTag();
-    };
-
     @Override
     default ResourceLocation getAmmoId(ItemStack ammoBox) {
-        CompoundTag tag = getTag(ammoBox);
-        if (tag.contains(AMMO_ID_TAG, Tag.TAG_STRING)) {
-            return ResourceLocation.parse(tag.getString(AMMO_ID_TAG));
-        }
-        return DefaultAssets.EMPTY_AMMO_ID;
+        return ammoBox.getOrDefault(AmmoComponents.AMMO_ID, DefaultAssets.EMPTY_AMMO_ID);
     }
 
     @Override
     default void setAmmoId(ItemStack ammoBox, ResourceLocation ammoId) {
-        CompoundTag tag = getTag(ammoBox);
-        tag.putString(AMMO_ID_TAG, ammoId.toString());
+        ammoBox.set(AmmoComponents.AMMO_ID, ammoId);
     }
 
     @Override
     default int getAmmoCount(ItemStack ammoBox) {
-        CompoundTag tag = getTag(ammoBox);
         if (isAllTypeCreative(ammoBox) || isCreative(ammoBox)) {
             return Integer.MAX_VALUE;
         }
-        if (tag.contains(AMMO_COUNT_TAG, Tag.TAG_INT)) {
-            return tag.getInt(AMMO_COUNT_TAG);
-        }
-        return 0;
+        return ammoBox.getOrDefault(AmmoComponents.AMMO_COUNT, 0);
     }
 
     @Override
     default void setAmmoCount(ItemStack ammoBox, int count) {
-        CompoundTag tag = getTag(ammoBox);
         if (isCreative(ammoBox)) {
-            tag.putInt(AMMO_COUNT_TAG, Integer.MAX_VALUE);
-            return;
+            ammoBox.set(AmmoComponents.AMMO_COUNT, Integer.MAX_VALUE);
+        } else {
+            ammoBox.set(AmmoComponents.AMMO_COUNT, count);
         }
-        tag.putInt(AMMO_COUNT_TAG, count);
     }
 
     @Override
@@ -73,61 +47,42 @@ public interface AmmoBoxItemDataAccessor extends IAmmoBox {
                 return false;
             }
             ResourceLocation gunId = iGun.getGunId(gun);
-            return TimelessAPI.getCommonGunIndex(gunId).map(gunIndex -> gunIndex.getGunData().getAmmoId().equals(ammoId)).orElse(false);
+            return TimelessAPI.getCommonGunIndex(gunId)
+                    .map(gunIndex -> gunIndex.getGunData().getAmmoId().equals(ammoId))
+                    .orElse(false);
         }
         return false;
     }
 
     @Override
     default ItemStack setAmmoLevel(ItemStack ammoBox, int level) {
-        CompoundTag tag = getTag(ammoBox);
-        tag.putInt(LEVEL_TAG, Math.max(level, 0));
+        ammoBox.set(AmmoComponents.AMMO_LEVEL, Math.max(level, 0));
         return ammoBox;
     }
 
     @Override
     default int getAmmoLevel(ItemStack ammoBox) {
-        CompoundTag tag = getTag(ammoBox);
-        if (tag.contains(LEVEL_TAG, Tag.TAG_INT)) {
-            return tag.getInt(LEVEL_TAG);
-        }
-        return 0;
+        return ammoBox.getOrDefault(AmmoComponents.AMMO_LEVEL, 0);
     }
 
     @Override
     default boolean isCreative(ItemStack ammoBox) {
-        CompoundTag tag = getTag(ammoBox);
-        if (tag != null && tag.contains(CREATIVE_TAG, Tag.TAG_BYTE)) {
-            return tag.getBoolean(CREATIVE_TAG);
-        }
-        return false;
+        return ammoBox.getOrDefault(AmmoComponents.AMMO_CREATIVE, false);
     }
 
     @Override
     default boolean isAllTypeCreative(ItemStack ammoBox) {
-        CompoundTag tag = getTag(ammoBox);
-        if (tag != null && tag.contains(ALL_TYPE_CREATIVE_TAG, Tag.TAG_BYTE)) {
-            return tag.getBoolean(ALL_TYPE_CREATIVE_TAG);
-        }
-        return false;
+        return ammoBox.getOrDefault(AmmoComponents.AMMO_ALL_TYPE, false);
     }
 
     @Override
     default ItemStack setCreative(ItemStack ammoBox, boolean isAllType) {
-        CompoundTag tag = getTag(ammoBox);
         if (isAllType) {
-            // 移除可能存在的创造模式标签
-            if (tag.contains(CREATIVE_TAG, Tag.TAG_BYTE)) {
-                tag.remove(CREATIVE_TAG);
-            }
-            tag.putBoolean(ALL_TYPE_CREATIVE_TAG, true);
-            return ammoBox;
+            ammoBox.set(AmmoComponents.AMMO_ALL_TYPE, true);
+        } else {
+            ammoBox.set(AmmoComponents.AMMO_ALL_TYPE,false);
         }
-        // 移除可能存在的全类型标签
-        if (tag.contains(ALL_TYPE_CREATIVE_TAG, Tag.TAG_BYTE)) {
-            tag.remove(ALL_TYPE_CREATIVE_TAG);
-        }
-        tag.putBoolean(CREATIVE_TAG, true);
+        ammoBox.set(AmmoComponents.AMMO_CREATIVE,true);
         return ammoBox;
     }
 }

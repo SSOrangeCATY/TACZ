@@ -1,4 +1,4 @@
-package com.tacz.guns.resource.pojo.data.attachment;
+package com.tacz.guns.resource.pojo.data.accessory;
 
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;

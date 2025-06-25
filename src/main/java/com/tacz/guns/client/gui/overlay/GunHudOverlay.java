@@ -16,7 +16,7 @@ import com.tacz.guns.client.resource.pojo.display.gun.AmmoCountStyle;
 import com.tacz.guns.config.client.RenderConfig;
 import com.tacz.guns.resource.pojo.data.gun.Bolt;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
-import com.tacz.guns.util.AttachmentDataUtils;
+import com.tacz.guns.util.AccessoryDataUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -71,8 +71,8 @@ public class GunHudOverlay implements LayeredDraw.Layer {
             return;
         }
 
-        int width = mc.screen.width;
-        int height = mc.screen.height;
+        int width = mc.getWindow().getScreenWidth();
+        int height = mc.getWindow().getScreenHeight();
         // 是否背包直读
         boolean useInventoryAmmo = iGun.useInventoryAmmo(stack);
         // 是否使用虚拟备弹
@@ -183,7 +183,7 @@ public class GunHudOverlay implements LayeredDraw.Layer {
         if ((System.currentTimeMillis() - checkAmmoTimestamp) > 50) {
             checkAmmoTimestamp = System.currentTimeMillis();
             // 当前枪械的总弹药数
-            cacheMaxAmmoCount = AttachmentDataUtils.getAmmoCountWithAttachment(stack, gunData);
+            cacheMaxAmmoCount = AccessoryDataUtils.getAmmoCountWithAttachment(stack, gunData);
             // 玩家背包弹药数
             if (IGunOperator.fromLivingEntity(player).needCheckAmmo()) {
                 if (iGun.useDummyAmmo(stack)) {

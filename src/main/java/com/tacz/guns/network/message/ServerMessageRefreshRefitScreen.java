@@ -2,7 +2,7 @@ package com.tacz.guns.network.message;
 
 import com.tacz.guns.GunMod;
 import com.tacz.guns.client.gui.GunRefitScreen;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -38,7 +38,12 @@ public class ServerMessageRefreshRefitScreen implements CustomPacketPayload {
         if (player != null && Minecraft.getInstance().screen instanceof GunRefitScreen screen) {
             screen.init();
             // 刷新配件数据，客户端的
-            AttachmentPropertyManager.postChangeEvent(player, player.getMainHandItem());
+            AccessoryPropertyManager.postChangeEvent(player, player.getMainHandItem());
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ServerMessageRefreshRefitScreen;
     }
 }

@@ -16,7 +16,7 @@ import com.tacz.guns.client.sound.SoundPlayManager;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ClientMessagePlayerShoot;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import com.tacz.guns.resource.modifier.custom.SilenceModifier;
 import com.tacz.guns.resource.pojo.data.gun.Bolt;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
@@ -218,7 +218,7 @@ public class LocalPlayerShoot {
     }
 
     private boolean useSilenceSound() {
-        AttachmentCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
+        AccessoryCacheProperty cacheProperty = IGunOperator.fromLivingEntity(player).getCacheProperty();
         if (cacheProperty != null) {
             Pair<Integer, Boolean> silence = cacheProperty.getCache(SilenceModifier.ID);
             return silence.right();

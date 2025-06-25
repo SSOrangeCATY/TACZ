@@ -2,7 +2,7 @@ package com.tacz.guns.client.gui.components.refit;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.gui.GunRefitScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -18,14 +18,14 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 public class GunAttachmentSlot extends Button implements IStackTooltip {
-    private final AttachmentType type;
+    private final AccessoryType type;
     private final Inventory inventory;
     private final int gunItemIndex;
     private final String nameKey;
     private boolean selected = false;
     private ItemStack attachmentItem = ItemStack.EMPTY;
 
-    public GunAttachmentSlot(int pX, int pY, AttachmentType type, int gunItemIndex, Inventory inventory, Button.OnPress onPress) {
+    public GunAttachmentSlot(int pX, int pY, AccessoryType type, int gunItemIndex, Inventory inventory, Button.OnPress onPress) {
         super(pX, pY, GunRefitScreen.SLOT_SIZE, GunRefitScreen.SLOT_SIZE, Component.empty(), onPress, Button.DEFAULT_NARRATION);
         this.type = type;
         this.inventory = inventory;
@@ -67,7 +67,7 @@ public class GunAttachmentSlot extends Button implements IStackTooltip {
             graphics.blit(GunRefitScreen.SLOT_TEXTURE, x + 1, y + 1, 1, 1, width - 2, height - 2, GunRefitScreen.SLOT_SIZE, GunRefitScreen.SLOT_SIZE);
         }
         // 渲染内部物品，或者空置时的icon
-        this.attachmentItem = iGun.getAttachment(gunItem, type);
+        this.attachmentItem = iGun.getAccessory(gunItem, type);
         if (!attachmentItem.isEmpty()) {
             graphics.renderItem(attachmentItem, x + 1, y + 1);
         } else {
@@ -83,7 +83,7 @@ public class GunAttachmentSlot extends Button implements IStackTooltip {
         this.selected = selected;
     }
 
-    public AttachmentType getType() {
+    public AccessoryType getType() {
         return type;
     }
 
@@ -93,7 +93,7 @@ public class GunAttachmentSlot extends Button implements IStackTooltip {
         if (iGun == null) {
             return ItemStack.EMPTY;
         }
-        return iGun.getAttachment(gunItem, type);
+        return iGun.getAccessory(gunItem, type);
     }
 
     public boolean isAllow() {
@@ -102,6 +102,6 @@ public class GunAttachmentSlot extends Button implements IStackTooltip {
         if (iGun == null) {
             return false;
         }
-        return iGun.allowAttachmentType(gunItem, type);
+        return iGun.allowAccessoryType(gunItem, type);
     }
 }

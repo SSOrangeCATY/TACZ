@@ -1,6 +1,6 @@
 package com.tacz.guns.api.event.common;
 
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 
@@ -11,9 +11,9 @@ import net.neoforged.bus.api.Event;
  */
 public class AttachmentPropertyEvent extends Event implements KubeJSGunEventPoster<AttachmentPropertyEvent> {
     private final ItemStack gunItem;
-    private final AttachmentCacheProperty cacheProperty;
+    private final AccessoryCacheProperty cacheProperty;
 
-    public AttachmentPropertyEvent(ItemStack gunItem, AttachmentCacheProperty attachmentProperty) {
+    public AttachmentPropertyEvent(ItemStack gunItem, AccessoryCacheProperty attachmentProperty) {
         this.gunItem = gunItem;
         this.cacheProperty = attachmentProperty;
     }
@@ -22,7 +22,7 @@ public class AttachmentPropertyEvent extends Event implements KubeJSGunEventPost
         return gunItem;
     }
 
-    public AttachmentCacheProperty getCacheProperty() {
+    public AccessoryCacheProperty getCacheProperty() {
         return cacheProperty;
     }
 }

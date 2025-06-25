@@ -3,6 +3,7 @@ package com.tacz.guns.entity.sync.core;
 import com.google.common.collect.ImmutableSet;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.init.CommonRegistry;
+import com.tacz.guns.init.ModAttachmentTypes;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
@@ -150,7 +151,7 @@ public class SyncedEntityData {
 
     @Nullable
     public DataHolder getDataHolder(Entity entity) {
-        return entity.getData(DATA_HOLDER);
+        return entity.getData(ModAttachmentTypes.DATA_HOLDER);
     }
 
 //    public boolean hasSyncedDataKey(Class<? extends Entity> entityClass) {

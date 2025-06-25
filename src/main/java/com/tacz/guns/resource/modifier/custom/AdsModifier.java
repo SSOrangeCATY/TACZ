@@ -6,9 +6,9 @@ import com.tacz.guns.api.modifier.CacheValue;
 import com.tacz.guns.api.modifier.IAttachmentModifier;
 import com.tacz.guns.api.modifier.JsonProperty;
 import com.tacz.guns.resource.CommonAssetsManager;
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
-import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
+import com.tacz.guns.resource.pojo.data.accessory.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -54,13 +54,13 @@ public class AdsModifier implements IAttachmentModifier<Modifier, Float> {
 
     @Override
     public void eval(List<Modifier> modifiers, CacheValue<Float> cache) {
-        double eval = AttachmentPropertyManager.eval(modifiers, cache.getValue());
+        double eval = AccessoryPropertyManager.eval(modifiers, cache.getValue());
         cache.setValue((float) eval);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    public List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         float aimTime = gunData.getAimTime();
         float modifiedAimTime = cacheProperty.<Float>getCache(AdsModifier.ID);
         float adsTimeModifier = modifiedAimTime - aimTime;
@@ -95,7 +95,7 @@ public class AdsModifier implements IAttachmentModifier<Modifier, Float> {
             float adsAddendTime = 0;
             if (value != null) {
                 // 传入默认值 0.2 进行测试，看看最终结果差值
-                double eval = AttachmentPropertyManager.eval(value, 0.2);
+                double eval = AccessoryPropertyManager.eval(value, 0.2);
                 adsAddendTime = (float) (eval - 0.2);
             }
             // 添加文本提示

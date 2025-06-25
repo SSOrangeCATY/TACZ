@@ -1,10 +1,10 @@
 package com.tacz.guns.util;
 
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
+import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.client.resource.GunDisplayInstance;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.client.resource.pojo.display.LaserConfig;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ public class LaserColorUtil {
             return defaultConfig.getDefaultColor();
         }
 
-        if (stack.getItem() instanceof IAttachment iAttachment) {
+        if (stack.getItem() instanceof IAccessory iAttachment) {
             if (iAttachment.hasCustomLaserColor(stack)) {
                 return iAttachment.getLaserColor(stack);
             } else {
@@ -39,12 +39,12 @@ public class LaserColorUtil {
             return 0xFF0000;
         }
 
-        if (stack.getItem() instanceof IAttachment iAttachment) {
+        if (stack.getItem() instanceof IAccessory iAttachment) {
             if (iAttachment.hasCustomLaserColor(stack)) {
                 return iAttachment.getLaserColor(stack);
             } else {
-                return TimelessAPI.getClientAttachmentIndex(iAttachment.getAttachmentId(stack))
-                        .map(ClientAttachmentIndex::getLaserConfig)
+                return TimelessAPI.getClientAttachmentIndex(iAttachment.getAccessoryId(stack))
+                        .map(ClientAccessoryIndex::getLaserConfig)
                         .map(LaserConfig::getDefaultColor)
                         .orElse(0xFF0000);
             }

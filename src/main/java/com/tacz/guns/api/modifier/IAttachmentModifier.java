@@ -1,6 +1,6 @@
 package com.tacz.guns.api.modifier;
 
-import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
+import com.tacz.guns.resource.modifier.AccessoryCacheProperty;
 import com.tacz.guns.resource.pojo.data.gun.GunData;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -62,7 +62,7 @@ public interface IAttachmentModifier<T, K> {
      * 获取改装界面的配置属性条相关数据
      */
     @OnlyIn(Dist.CLIENT)
-    default List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AttachmentCacheProperty cacheProperty) {
+    default List<DiagramsData> getPropertyDiagramsData(ItemStack gunItem, GunData gunData, AccessoryCacheProperty cacheProperty) {
         return Collections.emptyList();
     }
 

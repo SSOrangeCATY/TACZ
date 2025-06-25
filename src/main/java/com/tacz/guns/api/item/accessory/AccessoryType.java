@@ -1,4 +1,4 @@
-package com.tacz.guns.api.item.attachment;
+package com.tacz.guns.api.item.accessory;
 
 import com.google.gson.annotations.SerializedName;
 import com.mojang.serialization.Codec;
@@ -7,7 +7,7 @@ import net.minecraft.network.VarInt;
 import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.NotNull;
 
-public enum AttachmentType {
+public enum AccessoryType {
     /**
      * 瞄具
      */
@@ -43,18 +43,18 @@ public enum AttachmentType {
      */
     NONE;
 
-   public static final StreamCodec<ByteBuf, AttachmentType> STREAM_CODEC = new StreamCodec<>() {
-        public @NotNull AttachmentType decode(@NotNull ByteBuf buf) {
-            return AttachmentType.values()[VarInt.read(buf)];
+   public static final StreamCodec<ByteBuf, AccessoryType> STREAM_CODEC = new StreamCodec<>() {
+        public @NotNull AccessoryType decode(@NotNull ByteBuf buf) {
+            return AccessoryType.values()[VarInt.read(buf)];
         }
 
-        public void encode(@NotNull ByteBuf buf, AttachmentType type) {
+        public void encode(@NotNull ByteBuf buf, AccessoryType type) {
             VarInt.write(buf, type.ordinal());
         }
     };
 
-    public static final Codec<AttachmentType> CODEC = Codec.STRING.xmap(
-            AttachmentType::valueOf,
-            AttachmentType::name
+    public static final Codec<AccessoryType> CODEC = Codec.STRING.xmap(
+            AccessoryType::valueOf,
+            AccessoryType::name
     );
 }

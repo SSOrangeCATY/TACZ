@@ -1,12 +1,12 @@
 package com.tacz.guns.item;
 
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAttachment;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.IAccessory;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
-import com.tacz.guns.api.item.nbt.AttachmentItemDataAccessor;
+import com.tacz.guns.api.item.nbt.AccessoryItemDataAccessor;
 import com.tacz.guns.client.renderer.item.AttachmentItemRenderer;
-import com.tacz.guns.client.resource.index.ClientAttachmentIndex;
+import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
 import com.tacz.guns.inventory.tooltip.AttachmentItemTooltip;
 import com.tacz.guns.resource.index.CommonAttachmentIndex;
 import net.minecraft.client.Minecraft;
@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 
-public class AttachmentItem extends Item implements AttachmentItemDataAccessor {
+public class AttachmentItem extends Item implements AccessoryItemDataAccessor {
     public AttachmentItem() {
         super(new Properties().stacksTo(1).component(DataComponents.CUSTOM_DATA, CustomData.EMPTY));
     }
@@ -40,8 +40,8 @@ public class AttachmentItem extends Item implements AttachmentItemDataAccessor {
     @Nonnull
     @OnlyIn(Dist.CLIENT)
     public Component getName(@Nonnull ItemStack stack) {
-        ResourceLocation attachmentId = this.getAttachmentId(stack);
-        Optional<ClientAttachmentIndex> attachmentIndex = TimelessAPI.getClientAttachmentIndex(attachmentId);
+        ResourceLocation accessoryId = this.getAccessoryId(stack);
+        Optional<ClientAccessoryIndex> attachmentIndex = TimelessAPI.getClientAttachmentIndex(accessoryId);
         if (attachmentIndex.isPresent()) {
             return Component.translatable(attachmentIndex.get().getName());
         }
@@ -52,7 +52,7 @@ public class AttachmentItem extends Item implements AttachmentItemDataAccessor {
         return Comparator.comparingInt(m -> m.getValue().getSort());
     }
 
-    public static NonNullList<ItemStack> fillItemCategory(AttachmentType type) {
+    public static NonNullList<ItemStack> fillItemCategory(AccessoryType type) {
         NonNullList<ItemStack> stacks = NonNullList.create();
         TimelessAPI.getAllCommonAttachmentIndex().stream().sorted(idNameSort()).forEach(entry -> {
             if (entry.getValue().getPojo().isHidden()) {
@@ -60,6 +60,7 @@ public class AttachmentItem extends Item implements AttachmentItemDataAccessor {
             }
             if (type.equals(entry.getValue().getType())) {
                 ItemStack itemStack = AttachmentItemBuilder.create().setId(entry.getKey()).build();
+                itemStack.set(DataComponents.ITEM_NAME, Component.translatable(entry.getValue().getPojo().getName()));
                 stacks.add(itemStack);
             }
         });
@@ -80,18 +81,18 @@ public class AttachmentItem extends Item implements AttachmentItemDataAccessor {
 
     @Override
     @Nonnull
-    public AttachmentType getType(ItemStack attachmentStack) {
-        IAttachment iAttachment = IAttachment.getIAttachmentOrNull(attachmentStack);
+    public AccessoryType getType(ItemStack attachmentStack) {
+        IAccessory iAttachment = IAccessory.getIAttachmentOrNull(attachmentStack);
         if (iAttachment != null) {
-            ResourceLocation id = iAttachment.getAttachmentId(attachmentStack);
-            return TimelessAPI.getCommonAttachmentIndex(id).map(CommonAttachmentIndex::getType).orElse(AttachmentType.NONE);
+            ResourceLocation id = iAttachment.getAccessoryId(attachmentStack);
+            return TimelessAPI.getCommonAttachmentIndex(id).map(CommonAttachmentIndex::getType).orElse(AccessoryType.NONE);
         } else {
-            return AttachmentType.NONE;
+            return AccessoryType.NONE;
         }
     }
 
     @Override
     public @NotNull Optional<TooltipComponent> getTooltipImage(@NotNull ItemStack stack) {
-        return Optional.of(new AttachmentItemTooltip(this.getAttachmentId(stack), this.getType(stack), stack));
+        return Optional.of(new AttachmentItemTooltip(this.getAccessoryId(stack), this.getType(stack), stack));
     }
 }

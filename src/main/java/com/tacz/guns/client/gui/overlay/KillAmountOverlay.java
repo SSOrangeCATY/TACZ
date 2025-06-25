@@ -39,8 +39,8 @@ public class KillAmountOverlay implements LayeredDraw.Layer {
         if (!(stack.getItem() instanceof IGun)) {
             return;
         }
-        int width = mc.screen.width;
-        int height = mc.screen.height;
+        int width = mc.getWindow().getScreenWidth();
+        int height = mc.getWindow().getScreenHeight();
 
         String text;
         if (killAmount < 10) {

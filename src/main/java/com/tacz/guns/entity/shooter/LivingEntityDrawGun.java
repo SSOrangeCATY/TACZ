@@ -6,7 +6,7 @@ import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.event.ServerMessageGunDraw;
 import com.tacz.guns.resource.index.CommonGunIndex;
-import com.tacz.guns.resource.modifier.AttachmentPropertyManager;
+import com.tacz.guns.resource.modifier.AccessoryPropertyManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -52,7 +52,7 @@ public class LivingEntityDrawGun {
         NetworkHandler.sendToTrackingEntity(new ServerMessageGunDraw(shooter.getId(), lastItem, gunItemSupplier.get()), shooter);
         data.currentGunItem = gunItemSupplier;
         // 刷新配件数据
-        AttachmentPropertyManager.postChangeEvent(shooter, gunItemSupplier.get());
+        AccessoryPropertyManager.postChangeEvent(shooter, gunItemSupplier.get());
         updatePutAwayTime();
     }
 

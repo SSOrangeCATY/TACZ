@@ -5,13 +5,13 @@ import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.client.animation.statemachine.AnimationStateMachine;
 import com.tacz.guns.api.event.common.GunMeleeEvent;
 import com.tacz.guns.api.item.IGun;
-import com.tacz.guns.api.item.attachment.AttachmentType;
+import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.client.animation.statemachine.GunAnimationConstant;
 import com.tacz.guns.client.resource.GunDisplayInstance;
 import com.tacz.guns.client.sound.SoundPlayManager;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ClientMessagePlayerMelee;
-import com.tacz.guns.resource.pojo.data.attachment.MeleeData;
+import com.tacz.guns.resource.pojo.data.accessory.MeleeData;
 import com.tacz.guns.resource.pojo.data.gun.GunDefaultMeleeData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -47,14 +47,14 @@ public class LocalPlayerMelee {
         }
         ResourceLocation gunId = iGun.getGunId(mainHandItem);
         // 先检查枪口有没有近战属性
-        ResourceLocation muzzleId = iGun.getAttachmentId(mainHandItem, AttachmentType.MUZZLE);
+        ResourceLocation muzzleId = iGun.getAccessoryId(mainHandItem, AccessoryType.MUZZLE);
         MeleeData muzzleMeleeData = getMeleeData(muzzleId);
         if (muzzleMeleeData != null) {
             this.doMuzzleMelee(display);
             return;
         }
 
-        ResourceLocation stockId = iGun.getAttachmentId(mainHandItem, AttachmentType.STOCK);
+        ResourceLocation stockId = iGun.getAccessoryId(mainHandItem, AccessoryType.STOCK);
         MeleeData stockMeleeData = getMeleeData(stockId);
         if (stockMeleeData != null) {
             this.doStockMelee(display);
