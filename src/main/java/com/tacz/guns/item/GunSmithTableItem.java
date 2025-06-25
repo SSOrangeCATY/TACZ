@@ -2,6 +2,7 @@ package com.tacz.guns.item;
 
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.builder.BlockItemBuilder;
+import com.tacz.guns.api.item.component.GunComponents;
 import com.tacz.guns.api.item.nbt.BlockItemDataAccessor;
 import com.tacz.guns.client.renderer.item.GunSmithTableItemRenderer;
 import com.tacz.guns.client.resource.index.ClientBlockIndex;
@@ -49,6 +50,7 @@ public class GunSmithTableItem extends BlockItem implements BlockItemDataAccesso
         NonNullList<ItemStack> stacks = NonNullList.create();
         TimelessAPI.getAllCommonBlockIndex().forEach((blockIndex) -> {
             ItemStack stack = BlockItemBuilder.create(blockIndex.getValue().getBlock()).setId(blockIndex.getKey()).build();
+            stack.set(GunComponents.DISPLAY_ID,blockIndex.getValue().getPojo().getDisplay());
             stack.set(DataComponents.ITEM_NAME,Component.translatable(blockIndex.getValue().getPojo().getName()));
             stacks.add(stack);
         });

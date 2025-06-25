@@ -17,7 +17,6 @@ public final class CommonRegistry {
 
     @SubscribeEvent
     public static void onSetupEvent(FMLCommonSetupEvent event) {
-        event.enqueueWork(NetworkHandler::init);
         event.enqueueWork(ModSyncedEntityData::init);
     }
 

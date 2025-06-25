@@ -56,7 +56,7 @@ public class TickAnimationEvent {
         if (IClientItemExtensions.of(mainHandItem.getItem()).getCustomRenderer() instanceof AnimateGeoItemRenderer<?, ?> renderer) {
             // 如果物品不一样了，先尝试初始化状态机
             if (renderer.needReInit(mainHandItem)) {
-                renderer.tryInit(mainHandItem, player, event.getPartialTick().getGameTimeDeltaTicks());
+                renderer.tryInit(mainHandItem, player, Minecraft.getInstance().getTimer().getGameTimeDeltaTicks());
             }
             renderer.visualUpdate(mainHandItem);
         }

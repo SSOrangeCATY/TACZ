@@ -133,7 +133,7 @@ public class GunItemRendererWrapper extends AnimateGeoItemRenderer<BedrockGunMod
                 lastModel = model;
             }
             IClientPlayerGunOperator clientPlayerGunOperator = IClientPlayerGunOperator.fromLocalPlayer(player);
-            float partialTicks = Minecraft.getInstance().getFrameTimeNs();
+            float partialTicks = Minecraft.getInstance().getTimer().getGameTimeDeltaTicks();
             float aimingProgress = clientPlayerGunOperator.getClientAimingProgress(partialTicks);
             float zoom = iGun.getAimingZoom(stack);
             float multiplier = 1 - aimingProgress + aimingProgress / (float) Math.sqrt(zoom);
@@ -149,7 +149,7 @@ public class GunItemRendererWrapper extends AnimateGeoItemRenderer<BedrockGunMod
         Optional.ofNullable(getModel(stack)).ifPresent(model -> {
             PoseStack poseStack = event.getPoseStack();
             IClientPlayerGunOperator clientPlayerGunOperator = IClientPlayerGunOperator.fromLocalPlayer(player);
-            float partialTicks = Minecraft.getInstance().getFrameTimeNs();
+            float partialTicks = Minecraft.getInstance().getTimer().getGameTimeDeltaTicks();
             float aimingProgress = clientPlayerGunOperator.getClientAimingProgress(partialTicks);
             float zoom = iGun.getAimingZoom(stack);
             float multiplier = 1 - aimingProgress + aimingProgress / (float) Math.sqrt(zoom);
@@ -166,7 +166,6 @@ public class GunItemRendererWrapper extends AnimateGeoItemRenderer<BedrockGunMod
         if (!(stack.getItem() instanceof IGun)) {
             return;
         }
-
         TimelessAPI.getGunDisplay(stack).ifPresent(display -> {
             BedrockGunModel gunModel = display.getGunModel();
             var animationStateMachine = display.getAnimationStateMachine();

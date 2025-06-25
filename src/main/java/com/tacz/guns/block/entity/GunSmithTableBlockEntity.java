@@ -8,6 +8,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -71,6 +72,13 @@ public class GunSmithTableBlockEntity extends BlockEntity implements MenuProvide
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
         return new GunSmithTableMenu(id, inventory, getId());
+    }
+
+    @Override
+    public void writeClientSideData(AbstractContainerMenu menu, RegistryFriendlyByteBuf buffer) {
+        if (id != null) {
+            buffer.writeResourceLocation(id);
+        }
     }
 
     @Override

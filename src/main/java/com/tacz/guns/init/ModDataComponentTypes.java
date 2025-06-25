@@ -13,8 +13,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModDataComponentTypes {
     public static final DeferredRegister<DataComponentType<?>> COMPONENT_TYPES = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, GunMod.MOD_ID);
+
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CustomData>> DATA = COMPONENT_TYPES.register("gun_data",
-            ()-> new DataComponentType.Builder<CustomData>().persistent(CustomData.CODEC).build());
+            ()-> new DataComponentType.Builder<CustomData>().persistent(CustomData.CODEC).networkSynchronized(CustomData.STREAM_CODEC).build());
 
     static {
         GunMod.LOGGER.info("Data Component Types Registering...");

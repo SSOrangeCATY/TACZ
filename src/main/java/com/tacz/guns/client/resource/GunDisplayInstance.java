@@ -24,11 +24,15 @@ import com.tacz.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tacz.guns.client.resource.pojo.model.BedrockVersion;
 import com.tacz.guns.sound.SoundManager;
 import com.tacz.guns.util.ColorHex;
+import com.tacz.guns.util.DisplayCheckUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.commands.arguments.ParticleArgument;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -43,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
+
+import static net.minecraft.commands.arguments.ParticleArgument.ERROR_INVALID_OPTIONS;
 
 /**
  * 经过处理和校验的枪械显示数据
@@ -314,7 +320,7 @@ public class GunDisplayInstance {
             try {
                 String name = particle.getName();
                 if (StringUtils.isNoneBlank()) {
-                    particle.setParticleOptions(ParticleArgument.readParticle(new StringReader(name), (HolderLookup.Provider) BuiltInRegistries.PARTICLE_TYPE.asLookup()));
+                    particle.setParticleOptions(DisplayCheckUtils.readParticle(new StringReader(name)));
                     Preconditions.checkArgument(particle.getCount() > 0, "particle count must be greater than 0");
                     Preconditions.checkArgument(particle.getLifeTime() > 0, "particle life time must be greater than 0");
                     this.particle = particle;

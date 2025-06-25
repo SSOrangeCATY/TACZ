@@ -39,7 +39,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -63,8 +62,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMenu> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/gun_smith_table.png");
-    private static final ResourceLocation SIDE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/gun_smith_table_side.png");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/gun_smith_table.png");
+    public static final ResourceLocation SIDE = ResourceLocation.fromNamespaceAndPath(GunMod.MOD_ID, "textures/gui/gun_smith_table_side.png");
 
     private final LinkedHashMap<ResourceLocation, TabConfig> recipeKeys = Maps.newLinkedHashMap();
     private final Map<ResourceLocation, List<ResourceLocation>> recipes = Maps.newLinkedHashMap();
@@ -88,7 +87,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         this.classifyRecipes();
         this.typePage = 0;
         this.indexPage = 0;
-        this.selectedRecipe = this.getSelectedRecipe(selectedRecipeList != null && !this.selectedRecipeList.isEmpty() ? this.selectedRecipeList.get(0) : null);
+        this.selectedRecipe = this.getSelectedRecipe(selectedRecipeList != null && !this.selectedRecipeList.isEmpty() ? this.selectedRecipeList.getFirst() : null);
         this.getPlayerIngredientCount(this.selectedRecipe);
     }
 
@@ -174,7 +173,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
             selectedRecipeList = null;
         }
 
-        if (!this.recipeKeys.keySet().isEmpty()) {
+        if (!this.recipeKeys.isEmpty()) {
             if (selectedType == null) {
                 selectedType = this.recipeKeys.keySet().iterator().next();
             }
@@ -200,26 +199,30 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
 
             Minecraft minecraft = Minecraft.getInstance();
             ItemStack stack = minecraft.player != null ? minecraft.player.getMainHandItem() : ItemStack.EMPTY;
-            if (stack.getItem() instanceof IGun igun) {
-                if (result.getItem() instanceof IAmmo iAmmo) {
-                    return iAmmo.isAmmoOfGun(stack, result);
+            switch (stack.getItem()) {
+                case IGun igun -> {
+                    if (result.getItem() instanceof IAmmo iAmmo) {
+                        return iAmmo.isAmmoOfGun(stack, result);
+                    }
+                    if (result.getItem() instanceof IAccessory) {
+                        return igun.allowAccessory(stack, result);
+                    }
+                    return false;
                 }
-                if (result.getItem() instanceof IAccessory) {
-                    return igun.allowAccessory(stack, result);
+                case IAccessory iAccessory -> {
+                    if (result.getItem() instanceof IGun iGun) {
+                        return iGun.allowAccessory(result, stack);
+                    }
+                    return false;
                 }
-                return false;
-            }
-            if (stack.getItem() instanceof IAccessory) {
-                if (result.getItem() instanceof IGun iGun) {
-                    return iGun.allowAccessory(result, stack);
+                case IAmmo iAmmo -> {
+                    if (result.getItem() instanceof IGun) {
+                        return iAmmo.isAmmoOfGun(result, stack);
+                    }
+                    return false;
                 }
-                return false;
-            }
-            if (stack.getItem() instanceof IAmmo iAmmo) {
-                if (result.getItem() instanceof IGun) {
-                    return iAmmo.isAmmoOfGun(result, stack);
+                default -> {
                 }
-                return false;
             }
         }
         return true;
@@ -300,17 +303,12 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
     }
 
     private void addCraftButton() {
-        WidgetSprites buttonSprites = new WidgetSprites(
-                TEXTURE,
-                TEXTURE
-        );
-
         ImageButton craftButton = new ImageButton(
                 leftPos + 289,
                 topPos + 162,
                 48,
                 18,
-                buttonSprites,
+                null,
                 (button) -> {
                     if (this.selectedRecipe != null && playerIngredientCount != null) {
                         // 检查是否能合成，不能就不发包
@@ -331,43 +329,41 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
                         NetworkHandler.sendToServer(new ClientMessageCraft(this.selectedRecipe.getId(), this.menu.containerId));
                     }
                 }
-        );
+        ){
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int v = 164;
+                if (this.isHovered()){
+                    v+=18;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(), this.width, this.height,138, v,this.width,this.height,256,256);
+            }
+        };
 
         this.addRenderableWidget(craftButton);
     }
 
     private void addUrlButton() {
-        // 创建 WidgetSprites - 使用新的纹理系统
-        WidgetSprites urlButtonSprites = new WidgetSprites(
-                TEXTURE,
-                TEXTURE
-        );
-
-        // 创建 ImageButton
         ImageButton urlButton = new ImageButton(
                 leftPos + 112,
                 topPos + 164,
                 18,
                 18,
-                urlButtonSprites,
+                null,
                 (button) -> {
                     if (this.selectedRecipe != null) {
                         ItemStack output = selectedRecipe.getOutput();
                         Item item = output.getItem();
                         ResourceLocation id;
-
-                        // 确定物品类型并获取ID
-                        if (item instanceof IGun iGun) {
-                            id = iGun.getGunId(output);
-                        } else if (item instanceof IAccessory iAttachment) {
-                            id = iAttachment.getAccessoryId(output);
-                        } else if (item instanceof IAmmo iAmmo) {
-                            id = iAmmo.getAmmoId(output);
-                        } else {
-                            return;
+                        switch (item) {
+                            case IGun iGun -> id = iGun.getGunId(output);
+                            case IAccessory accessory -> id = accessory.getAccessoryId(output);
+                            case IAmmo iAmmo -> id = iAmmo.getAmmoId(output);
+                            default -> {
+                                return;
+                            }
                         }
 
-                        // 获取包信息
                         PackInfo packInfo = ClientAssetsManager.INSTANCE.getPackInfo(id);
                         if (packInfo == null) {
                             return;
@@ -375,21 +371,36 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
 
                         String url = packInfo.getUrl();
                         if (StringUtils.isNotBlank(url) && minecraft != null) {
-                            // 创建确认链接屏幕
-                            minecraft.setScreen(new ConfirmLinkScreen(
-                                    yes -> {
-                                        if (yes) {
-                                            Util.getPlatform().openUri(url);
-                                        }
-                                        minecraft.setScreen(this);
-                                    },
-                                    url,
-                                    false
-                            ));
+                            minecraft.setScreen(new ConfirmLinkScreen(yes -> {
+                                if (yes) {
+                                    Util.getPlatform().openUri(url);
+                                }
+                                minecraft.setScreen(this);
+                            }, url, false));
                         }
                     }
                 }
-                );
+        ) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 149;
+                int v = 211;
+
+                // 根据按钮状态调整v坐标
+                if (!this.active) {
+                    v += 36;
+                } else if (this.isHoveredOrFocused()) {
+                    v += 18;
+                }
+
+                guiGraphics.blit(TEXTURE,
+                        this.getX(), this.getY(),
+                        this.width, this.height,
+                        u, v,
+                        this.width, this.height,
+                        256, 256);
+            }
+        };
 
         this.addRenderableWidget(urlButton);
     }
@@ -430,9 +441,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
             TabConfig tabConfig = list.get(typeIndex);
             ResourceLocation type = tabConfig.id();
             int xOffset = leftPos + 157 + 24 * i;
-
-            ItemStack icon = tabConfig.icon();
-
+            ItemStack icon = tabConfig.icon().itemStack();
             TypeButton typeButton = new TypeButton(xOffset, topPos + 2, icon, b -> {
                 this.selectedType = type;
                 this.selectedRecipeList = recipes.get(type);
@@ -450,113 +459,198 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
     }
 
     private void addIndexPageButtons() {
-        WidgetSprites buttonSprites = new WidgetSprites(
-                TEXTURE,
-                TEXTURE
-        );
-
-        ImageButton prevButton = new ImageButton(
+        ImageButton prevPageButton = new ImageButton(
                 leftPos + 143,
                 topPos + 56,
                 96,
                 6,
-                buttonSprites,
+                null,
                 (button) -> {
                     if (this.indexPage > 0) {
                         this.indexPage--;
-                        this.init();
+                        this.init(); // 重新初始化界面
                     }
                 }
-        );
-        this.addRenderableWidget(prevButton);
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 40;   // 纹理X坐标
+                int v = 166;   // 纹理Y坐标
+                if (this.isHovered()) {
+                    v += 6;
+                }
+                guiGraphics.blit(TEXTURE,
+                        this.getX(), this.getY(),
+                        this.width, this.height,
+                        u, v,
+                        this.width, this.height,
+                        256, 256);
+            }
+        };
+        this.addRenderableWidget(prevPageButton);
 
-        ImageButton nextButton = new ImageButton(
+        // 下一页按钮（底部箭头）
+        ImageButton nextPageButton = new ImageButton(
                 leftPos + 143,
                 topPos + 171,
                 96,
                 6,
-                buttonSprites,
+                null,
                 (button) -> {
                     if (selectedRecipeList != null && !selectedRecipeList.isEmpty()) {
-                        int maxIndexPage = (selectedRecipeList.size() - 1) / 6;
+                        int maxIndexPage = (selectedRecipeList.size() - 1) / 6; // 每页6个配方
                         if (this.indexPage < maxIndexPage) {
                             this.indexPage++;
-                            this.init();
+                            this.init(); // 重新初始化界面
                         }
                     }
                 }
-        );
-        this.addRenderableWidget(nextButton);
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 40;
+                int v = 186;
+                if (this.isHovered()) {
+                    v += 6;
+                }
+                guiGraphics.blit(TEXTURE,
+                        this.getX(), this.getY(),
+                        this.width, this.height,
+                        u, v,
+                        this.width, this.height,
+                        256, 256);
+            }
+        };
+        this.addRenderableWidget(nextPageButton);
     }
 
     private void addTypePageButtons() {
-        WidgetSprites buttonSprites = new WidgetSprites(
-                TEXTURE,
-                TEXTURE
-        );
-
-        this.addRenderableWidget(new ImageButton(
+        ImageButton prevButton = new ImageButton(
                 leftPos + 136,
                 topPos + 4,
                 18,
                 20,
-                buttonSprites,
-                b -> {
+                null,
+                (button) -> {
                     if (this.typePage > 0) {
                         this.typePage--;
                         this.init();
                     }
                 }
-        ));
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 0;
+                int v = 162;
+                if (this.isHovered()) {
+                    v += 20;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(), this.width, this.height, u, v, this.width, this.height, 256, 256);
+            }
+        };
+        this.addRenderableWidget(prevButton);
 
-        this.addRenderableWidget(new ImageButton(
+        ImageButton nextButton = new ImageButton(
                 leftPos + 327,
                 topPos + 4,
                 18,
                 20,
-                buttonSprites,
-                b -> {
+                null,
+                (button) -> {
                     int maxIndexPage = (recipes.size() - 1) / 7;
                     if (this.typePage < maxIndexPage) {
                         this.typePage++;
                         this.init();
                     }
                 }
-        ));
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 20;
+                int v = 162;
+                if (this.isHovered()) {
+                    v += 20;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(), this.width, this.height, u, v, this.width, this.height, 256, 256);
+            }
+        };
+        this.addRenderableWidget(nextButton);
     }
 
     private void addScaleButtons() {
-        WidgetSprites buttonSprites = new WidgetSprites(
-                TEXTURE,
-                TEXTURE
-        );
-
-        this.addRenderableWidget(new ImageButton(
+        // 放大按钮 (+)
+        ImageButton zoomInButton = new ImageButton(
                 leftPos + 5,
                 topPos + 5,
                 10,
                 10,
-                buttonSprites,
-                b -> this.scale = Math.min(this.scale + 20, 200)
-        ));
+                null,
+                (button) -> {
+                    this.scale = Math.min(this.scale + 20, 200); // 限制最大缩放200%
+                }
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 188; // 纹理X坐标
+                int v = 173; // 纹理Y坐标
+                if (this.isHovered()) {
+                    v += 10;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(),
+                        this.width, this.height, u, v,
+                        this.width, this.height, 256, 256);
+            }
+        };
+        this.addRenderableWidget(zoomInButton);
 
-        this.addRenderableWidget(new ImageButton(
+        ImageButton zoomOutButton = new ImageButton(
                 leftPos + 17,
                 topPos + 5,
                 10,
                 10,
-                buttonSprites,
-                b -> this.scale = Math.max(this.scale - 20, 10)
-        ));
+                null,
+                (button) -> {
+                    this.scale = Math.max(this.scale - 20, 10); // 限制最小缩放10%
+                }
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 200;
+                int v = 173;
+                if (this.isHovered()) {
+                    v += 10;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(),
+                        this.width, this.height, u, v,
+                        this.width, this.height, 256, 256);
+            }
+        };
+        this.addRenderableWidget(zoomOutButton);
 
-        this.addRenderableWidget(new ImageButton(
+
+        ImageButton resetButton = new ImageButton(
                 leftPos + 29,
                 topPos + 5,
                 10,
                 10,
-                buttonSprites,
-                b -> this.scale = 70
-        ));
+                null,
+                (button) -> {
+                    this.scale = 70; // 重置为默认缩放
+                }
+        ) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                int u = 212;
+                int v = 173;
+                if (this.isHovered()) {
+                    v += 10;
+                }
+                guiGraphics.blit(TEXTURE, this.getX(), this.getY(),
+                        this.width, this.height, u, v,
+                        this.width, this.height, 256, 256);
+            }
+        };
+        this.addRenderableWidget(resetButton);
     }
 
     @Override
@@ -603,14 +697,13 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         ItemStack output = recipe.getOutput();
         Item item = output.getItem();
         ResourceLocation id;
-        if (item instanceof IGun iGun) {
-            id = iGun.getGunId(output);
-        } else if (item instanceof IAccessory iAttachment) {
-            id = iAttachment.getAccessoryId(output);
-        } else if (item instanceof IAmmo iAmmo) {
-            id = iAmmo.getAmmoId(output);
-        } else {
-            return;
+        switch (item) {
+            case IGun iGun -> id = iGun.getGunId(output);
+            case IAccessory iAttachment -> id = iAttachment.getAccessoryId(output);
+            case IAmmo iAmmo -> id = iAmmo.getAmmoId(output);
+            default -> {
+                return;
+            }
         }
 
         PackInfo packInfo = ClientAssetsManager.INSTANCE.getPackInfo(id);
@@ -776,7 +869,6 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
 
     @Override
     protected void renderBg(@NotNull GuiGraphics gui, float partialTick, int mouseX, int mouseY) {
-        this.renderBackground(gui,mouseX,mouseY,partialTick);
         gui.blit(SIDE, leftPos, topPos, 0, 0, 134, 187);
         gui.blit(TEXTURE, leftPos + 136, topPos + 27, 0, 0, 208, 160);
     }

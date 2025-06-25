@@ -3,6 +3,7 @@ package com.tacz.guns.item;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
+import com.tacz.guns.api.item.component.GunComponents;
 import com.tacz.guns.api.item.nbt.AmmoItemDataAccessor;
 import com.tacz.guns.client.renderer.item.AmmoItemRenderer;
 import com.tacz.guns.client.resource.ClientAssetsManager;
@@ -10,6 +11,7 @@ import com.tacz.guns.client.resource.index.ClientAmmoIndex;
 import com.tacz.guns.client.resource.pojo.PackInfo;
 import com.tacz.guns.init.ModDataComponentTypes;
 import com.tacz.guns.resource.index.CommonAmmoIndex;
+import com.tacz.guns.resource.pojo.AmmoIndexPOJO;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -62,7 +64,9 @@ public class AmmoItem extends Item implements AmmoItemDataAccessor {
         NonNullList<ItemStack> stacks = NonNullList.create();
         TimelessAPI.getAllCommonAmmoIndex().forEach(entry -> {
             ItemStack itemStack = AmmoItemBuilder.create().setId(entry.getKey()).build();
-            itemStack.set(DataComponents.ITEM_NAME,Component.translatable(entry.getValue().getPojo().getName()));
+            AmmoIndexPOJO pojo = entry.getValue().getPojo();
+            itemStack.set(DataComponents.ITEM_NAME,Component.translatable(pojo.getName()));
+            itemStack.set(GunComponents.DISPLAY_ID,pojo.getDisplay());
             stacks.add(itemStack);
         });
         return stacks;

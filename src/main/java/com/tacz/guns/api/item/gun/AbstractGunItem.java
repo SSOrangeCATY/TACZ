@@ -7,6 +7,7 @@ import com.tacz.guns.api.item.*;
 import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
+import com.tacz.guns.api.item.component.GunComponents;
 import com.tacz.guns.client.renderer.item.GunItemRendererWrapper;
 import com.tacz.guns.client.resource.index.ClientGunIndex;
 import com.tacz.guns.entity.shooter.ShooterDataHolder;
@@ -348,6 +349,7 @@ public abstract class AbstractGunItem extends Item implements IGun, IAnimationIt
                         .setHeatData(gunData.hasHeatData())
                         .setAmmoInBarrel(true)
                         .build();
+                itemStack.set(GunComponents.DISPLAY_ID,index.getPojo().getDisplay());
                 itemStack.set(DataComponents.ITEM_NAME,Component.translatable(index.getPojo().getName()));
                 stacks.add(itemStack);
             }

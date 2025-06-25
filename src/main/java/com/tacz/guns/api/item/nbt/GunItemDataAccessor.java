@@ -160,15 +160,15 @@ public interface GunItemDataAccessor extends IGun {
     @Override
     @NotNull
     default ResourceLocation getGunDisplayId(ItemStack gun) {
-        return gun.getOrDefault(GunComponents.GUN_DISPLAY_ID, DefaultAssets.DEFAULT_GUN_DISPLAY_ID);
+        return gun.getOrDefault(GunComponents.DISPLAY_ID, DefaultAssets.DEFAULT_GUN_DISPLAY_ID);
     }
 
     @Override
     default void setGunDisplayId(ItemStack gun, ResourceLocation displayId) {
         if (displayId != null) {
-            gun.set(GunComponents.GUN_DISPLAY_ID, displayId);
+            gun.set(GunComponents.DISPLAY_ID, displayId);
         } else {
-            gun.remove(GunComponents.GUN_DISPLAY_ID);
+            gun.remove(GunComponents.DISPLAY_ID);
         }
     }
 

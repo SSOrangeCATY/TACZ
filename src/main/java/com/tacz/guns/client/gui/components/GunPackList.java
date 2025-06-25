@@ -173,7 +173,6 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
     }
 
     public static class Checkbox extends AbstractButton {
-        private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/gui/checkbox.png");
         protected boolean selected;
         protected final boolean showLabel;
         private String id;
@@ -223,7 +222,7 @@ public class GunPackList extends ContainerObjectSelectionList<GunPackList.Entry>
             Font font = minecraft.font;
             pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
             RenderSystem.enableBlend();
-            pGuiGraphics.blit(TEXTURE, this.getX(), this.getY(), this.isFocused() ? 10.0F : 0.0F, this.selected ? 10.0F : 0.0F, 10, 10, 32, 32);
+            pGuiGraphics.fill(this.getX(), this.getY(), 10, 10, this.isFocused() ? 0xADD8E6 : 0x808080);
             pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
             if (this.showLabel) {
                 pGuiGraphics.drawString(font, this.getMessage(), this.getX() + 24, this.getY() + (this.height - 8) / 2, 14737632 | Mth.ceil(this.alpha * 255.0F) << 24);

@@ -4,6 +4,7 @@ import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAccessory;
 import com.tacz.guns.api.item.accessory.AccessoryType;
 import com.tacz.guns.api.item.builder.AttachmentItemBuilder;
+import com.tacz.guns.api.item.component.GunComponents;
 import com.tacz.guns.api.item.nbt.AccessoryItemDataAccessor;
 import com.tacz.guns.client.renderer.item.AttachmentItemRenderer;
 import com.tacz.guns.client.resource.index.ClientAccessoryIndex;
@@ -61,6 +62,7 @@ public class AttachmentItem extends Item implements AccessoryItemDataAccessor {
             if (type.equals(entry.getValue().getType())) {
                 ItemStack itemStack = AttachmentItemBuilder.create().setId(entry.getKey()).build();
                 itemStack.set(DataComponents.ITEM_NAME, Component.translatable(entry.getValue().getPojo().getName()));
+                itemStack.set(GunComponents.DISPLAY_ID,entry.getValue().getPojo().getDisplay());
                 stacks.add(itemStack);
             }
         });

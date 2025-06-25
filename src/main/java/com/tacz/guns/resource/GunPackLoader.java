@@ -52,7 +52,7 @@ public enum GunPackLoader implements RepositorySource {
     public Pack discoverExtensions() {
         Path resourcePacksPath = FMLPaths.GAMEDIR.get().resolve("tacz");
         File folder = resourcePacksPath.toFile();
-        // 创建目录（如果不存在）
+
         if (!folder.isDirectory()) {
             try {
                 Files.createDirectories(folder.toPath());

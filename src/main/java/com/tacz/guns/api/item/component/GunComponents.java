@@ -16,8 +16,8 @@ public class GunComponents {
                     .networkSynchronized(ResourceLocation.STREAM_CODEC)
                     .build());
     
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> GUN_DISPLAY_ID =
-            ModDataComponentTypes.COMPONENT_TYPES.register("gun_display_id", () -> DataComponentType.<ResourceLocation>builder()
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> DISPLAY_ID =
+            ModDataComponentTypes.COMPONENT_TYPES.register("display_id", () -> DataComponentType.<ResourceLocation>builder()
                 .persistent(ResourceLocation.CODEC)
                 .networkSynchronized(ResourceLocation.STREAM_CODEC)
                 .build());

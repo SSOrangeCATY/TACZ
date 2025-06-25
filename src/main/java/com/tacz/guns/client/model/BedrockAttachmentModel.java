@@ -250,7 +250,7 @@ public class BedrockAttachmentModel extends BedrockAnimatedModel {
             float rad = 80 * scopeViewRadiusModifier;
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                rad *= IClientPlayerGunOperator.fromLocalPlayer(player).getClientAimingProgress(Minecraft.getInstance().getFrameTimeNs());
+                rad *= IClientPlayerGunOperator.fromLocalPlayer(player).getClientAimingProgress(Minecraft.getInstance().getTimer().getGameTimeDeltaTicks());
             }
             for (int i = 0; i < ocularNodePaths.size(); i++) {
                 if (selective && !isScopeOcular.get(i)) {

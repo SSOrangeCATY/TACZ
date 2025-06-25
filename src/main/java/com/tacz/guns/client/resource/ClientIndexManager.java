@@ -68,11 +68,7 @@ public class ClientIndexManager {
         TimelessAPI.getAllCommonGunIndex().forEach(index -> {
             ResourceLocation id = index.getKey();
             GunIndexPOJO pojo = index.getValue().getPojo();
-            try {
-                GUN_INDEX.put(id, ClientGunIndex.getInstance(pojo));
-            } catch (IllegalArgumentException exception) {
-                GunMod.LOGGER.warn("{} index file read fail!", id, exception);
-            }
+            GUN_INDEX.put(id, ClientGunIndex.getInstance(pojo));
         });
     }
 
